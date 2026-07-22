@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Теневые Архетипы</title>
+    <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0f;
+            color: #e0d7c6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        .app {
+            max-width: 420px;
+            width: 100%;
+            padding: 20px;
+            text-align: center;
+        }
+        .screen {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+        .screen.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        h1 { font-size: 2rem; color: #d4af37; margin-bottom: 1rem; text-shadow: 0 0 10px #000; }
+        h2 { font-size: 1.5rem; color: #c9a84c; margin-bottom: 1rem; }
+        p { margin-bottom: 1.5rem; line-height: 1.6; }
+        .btn {
+            display: inline-block;
+            background: #2a2a35;
+            color: #d4af37;
+            border: 1px solid #d4af37;
+            padding: 12px 24px;
+            margin: 8px;
+            border-radius: 30px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+        .btn:hover { background: #3a3a4a; }
+        .btn-block { display: block; width: 100%; }
+        .answers { display: flex; flex-direction: column; align-items: stretch; }
+        .answer-btn {
+            background: #1e1e28;
+            border: 1px solid #3a3a45;
+            padding: 12px;
+            margin: 6px 0;
+            border-radius: 12px;
+            color: #ccc;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .answer-btn:hover { background: #2a2a38; }
+        .answer-btn img { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; }
+        .question-image {
+            width: 100%;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            object-fit: contain;
+            background-color: #0a0a0f;
+        }
+        .result-image {
+            width: 100%;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            max-height: 350px;
+            object-fit: cover;
+        }
+        .premium-content { background: #1a1a24; padding: 20px; border-radius: 16px; text-align: left; margin: 20px 0; }
+        .loading { font-size: 1.2rem; color: #d4af37; }
+        .small { font-size: 0.8rem; color: #888; margin-top: 20px; }
+        .loading-image {
+            display: block;
+            width: 100%;
+            max-width: 100%;
+            height: auto;
+            max-height: 60vh;
+            object-fit: contain;
+            border-radius: 16px;
+            margin: 0 auto 20px;
+            background-color: #0a0a0f;
+        }
+    </style>
+</head>
+<body>
+    <div class="app" id="app">
+        <div class="screen active" id="screen-start">
+            <img src="images/cover.jpg" alt="Обложка" class="question-image">
+            <h1>Тени сгущаются…</h1>
+            <p>В каждом из нас дремлет первородная сила — Теневой Архетип. Ответь на 7 вопросов, и мы покажем, кто скрывается под твоей маской.</p>
+            <button class="btn btn-block" onclick="showScreen('screen-q1')">Узнать свою Тень</button>
+        </div>
+
+        <div class="screen" id="screen-q1">
+            <img src="images/q.jpg" alt="Дверь в неизвестность" class="question-image">
+            <h2>Дверь в неизвестность</h2>
+            <p>Ты стоишь перед порталом. Выбери дверь, в которую войдёшь без страха.</p>
+            <div class="answers">
+                <button class="answer-btn" onclick="addScore('anchorite', 1, 'screen-q2')"><img src="images/q1a.jpg" alt=""> А) Дверь в подвал с тусклым дрожащим светом</button>
+                <button class="answer-btn" onclick="addScore('oracle', 1, 'screen-q2')"><img src="images/q1b.jpg" alt=""> Б) Витиеватая дверь в старинную библиотеку</button>
+                <button class="answer-btn" onclick="addScore('puppeteer', 1, 'screen-q2')"><img src="images/q1v.jpg" alt=""> В) Стальная гермодверь с кодовым замком</button>
+                <button class="answer-btn" onclick="addScore('berserker', 1, 'screen-q2')"><img src="images/q1g.jpg" alt=""> Г) Готическая дверь с витражом, изображающим битву</button>
+            </div>
+        </div>
+
+        <div class="screen" id="screen-q2">
+            <img src="images/w.jpg" alt="Сила стихии" class="question-image">
+            <h2>Сила стихии</h2>
+            <p>Твоя внутренняя ярость похожа на…</p>
+            <div class="answers">
+                <button class="answer-btn" onclick="addScore('berserker', 1, 'screen-q3')"><img src="images/w1a.jpg" alt=""> А) Бушующий лесной пожар</button>
+                <button class="answer-btn" onclick="addScore('anchorite', 1, 'screen-q3')"><img src="images/w1b.jpg" alt=""> Б) Глубокий чёрный омут, поглощающий звуки</button>
+                <button class="answer-btn" onclick="addScore('trickster', 1, 'screen-q3')"><img src="images/w1v.jpg" alt=""> В) Песчаная буря, сметающая ориентиры</button>
+                <button class="answer-btn" onclick="addScore('necromancer', 1, 'screen-q3')"><img src="images/w1g.jpg" alt=""> Г) Ядовитый туман, просачивающийся сквозь щели</button>
+            </div>
+        </div>
+
+        <div class="screen" id="screen-q3">
+            <img src="images/e.jpg" alt="Сокровище" class="question-image">
+            <h2>Сокровище</h2>
+            <p>В заброшенном храме ты находишь артефакт. Что это?</p>
+            <div class="answers">
+                <button class="answer-btn" onclick="addScore('oracle', 1, 'screen-q4')"><img src="images/e1a.jpg" alt=""> А) Древний свиток с пророчеством, написанным твоим почерком</button>
+                <button class="answer-btn" onclick="addScore('trickster', 1, 'screen-q4')"><img src="images/e1b.jpg" alt=""> Б) Маска, меняющая лица, как в калейдоскопе</button>
+                <button class="answer-btn" onclick="addScore('berserker', 1, 'screen-q4')"><img src="images/e1v.jpg" alt=""> В) Кинжал, рукоять которого идеально ложится в твою ладонь</button>
+                <button class="answer-btn" onclick="addScore('puppeteer', 1, 'screen-q4')"><img src="images/e1g.jpg" alt=""> Г) Старинный компас, указывающий путь не на север, а к месту силы</button>
+            </div>
+        </div>
+
+        <div class="screen" id="screen-q4">
+            <img src="images/r.jpg" alt="Убежище" class="question-image">
+            <h2>Убежище</h2>
+            <p>Где ты чувствуешь абсолютную, непробиваемую безопасность?</p>
+            <div class="answers">
+                <button class="answer-btn" onclick="addScore('anchorite', 1, 'screen-q5')"><img src="images/r1a.jpg" alt=""> А) В башне из слоновой кости, в полном одиночестве</button>
+                <button class="answer-btn" onclick="addScore('trickster', 1, 'screen-q5')"><img src="images/r1b.jpg" alt=""> Б) В центре шумного карнавала, где ты — невидимка</button>
+                <button class="answer-btn" onclick="addScore('puppeteer', 1, 'screen-q5')"><img src="images/r1v.jpg" alt=""> В) В командном центре с мониторами, откуда видно всё и всех</button>
+                <button class="answer-btn" onclick="addScore('necromancer', 1, 'screen-q5')"><img src="images/r1g.jpg" alt=""> Г) На пепелище, где уже ничего не страшно, потому что всё пережито</button>
+            </div>
+        </div>
+
+        <div class="screen" id="screen-q5">
+            <img src="images/t.jpg" alt="Оружие" class="question-image">
+            <h2>Оружие</h2>
+            <p>Твоё идеальное оружие — это…</p>
+            <div class="answers">
+                <button class="answer-btn" onclick="addScore('oracle', 1, 'screen-q6')"><img src="images/t1a.jpg" alt=""> А) Слово, способное исцелить или разрушить</button>
+                <button class="answer-btn" onclick="addScore('puppeteer', 1, 'screen-q6')"><img src="images/t1b.jpg" alt=""> Б) Терпение и план, рассчитанный на десять шагов вперёд</button>
+                <button class="answer-btn" onclick="addScore('necromancer', 1, 'screen-q6')"><img src="images/t1v.jpg" alt=""> В) Собственная тень, которая материализуется и защищает тебя</button>
+                <button class="answer-btn" onclick="addScore('trickster', 1, 'screen-q6')"><img src="images/t1g.jpg" alt=""> Г) Паутина лжи и дезинформации, опутывающая врага</button>
+            </div>
+        </div>
+
+        <div class="screen" id="screen-q6">
+            <img src="images/y.jpg" alt="Тень" class="question-image">
+            <h2>Тень</h2>
+            <p>Посмотри в угол комнаты. Что шевелится в темноте?</p>
+            <div class="answers">
+                <button class="answer-btn" onclick="addScore('trickster', 1, 'screen-q7')"><img src="images/y1a.jpg" alt=""> А) Твой двойник, который улыбается тебе, но с задержкой</button>
+                <button class="answer-btn" onclick="addScore('berserker', 1, 'screen-q7')"><img src="images/y1b.jpg" alt=""> Б) Стая волков с горящими жёлтыми глазами, ждущих команды</button>
+                <button class="answer-btn" onclick="addScore('anchorite', 1, 'screen-q7')"><img src="images/y1v.jpg" alt=""> В) Ничего. Ты и есть самая опасная тварь в этой темноте</button>
+                <button class="answer-btn" onclick="addScore('necromancer', 1, 'screen-q7')"><img src="images/y1g.jpg" alt=""> Г) Сияющий призрак, протягивающий тебе ключ от следующей жизни</button>
+            </div>
+        </div>
+
+        <div class="screen" id="screen-q7">
+            <img src="images/u.jpg" alt="Жертва" class="question-image">
+            <h2>Жертва</h2>
+            <p>Ради чего ты готов пожертвовать всем?</p>
+            <div class="answers">
+                <button class="answer-btn" onclick="addScore('oracle', 1, 'screen-loading')"><img src="images/u1a.jpg" alt=""> А) Ради абсолютной Истины, даже если она разрушит твой мир</button>
+                <button class="answer-btn" onclick="addScore('berserker', 1, 'screen-loading')"><img src="images/u1b.jpg" alt=""> Б) Ради свободы — своей или тех, кого ты любишь</button>
+                <button class="answer-btn" onclick="addScore('puppeteer', 1, 'screen-loading')"><img src="images/u1v.jpg" alt=""> В) Ради Великого Замысла, который поймут лишь через столетия</button>
+                <button class="answer-btn" onclick="addScore('necromancer', 1, 'screen-loading')"><img src="images/u1g.jpg" alt=""> Г) Ради того, чтобы воскресить нечто утраченное или вернуть ушедших</button>
+            </div>
+        </div>
+
+        <div class="screen" id="screen-loading">
+            <img src="images/over.jpg" alt="Ожидание" class="loading-image">
+            <div class="loading">⏳ Тени сгущаются… Мы снимаем покров…</div>
+            <p class="small">Сейчас будет показано короткое видео, чтобы открыть результат.</p>
+        </div>
+
+        <div class="screen" id="screen-result">
+            <img id="result-img" src="" alt="Архетип" class="result-image">
+            <h2 id="result-title"></h2>
+            <p id="result-desc"></p>
+            <button class="btn btn-block" onclick="shareResult()">Поделиться на стену</button>
+            <button class="btn btn-block" id="premium-btn" onclick="buyPremium()">Получить Полный Разбор (49 голосов)</button>
+            <button class="btn btn-block" onclick="restartQuiz()">Пройти заново</button>
+        </div>
+
+        <div class="screen" id="screen-premium">
+            <h2>Полный разбор архетипа</h2>
+            <div class="premium-content" id="premium-text"></div>
+            <button class="btn btn-block" onclick="showScreen('screen-start')">На главную</button>
+        </div>
+    </div>
+
+    <script>
+        const APP_ID = 54687803;
+
+        vkBridge.send('VKWebAppInit');
+
+        const scores = {
+            trickster: 0,
+            anchorite: 0,
+            berserker: 0,
+            puppeteer: 0,
+            oracle: 0,
+            necromancer: 0
+        };
+
+        let currentResult = null;
+
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            const target = document.getElementById(id);
+            if (target) {
+                target.classList.add('active');
+                if (id === 'screen-loading') {
+                    setTimeout(showRewardedVideo, 2000);
+                }
+            }
+        }
+
+        function addScore(category, points, nextScreen) {
+            if (scores.hasOwnProperty(category)) {
+                scores[category] += points;
+            }
+            showScreen(nextScreen);
+        }
+
+        function getWinner() {
+            let max = -1;
+            let winner = 'anchorite';
+            for (let key in scores) {
+                if (scores[key] > max) {
+                    max = scores[key];
+                    winner = key;
+                }
+            }
+            return winner;
+        }
+
+        function showRewardedVideo() {
+            vkBridge.send('VKWebAppShowRewardedVideo')
+                .then(() => { showResult(); })
+                .catch(() => { showResult(); });
+        }
+
+        function showResult() {
+            const winner = getWinner();
+            currentResult = winner;
+            const data = resultData[winner];
+            if (!data) return;
+            document.getElementById('result-img').src = data.image;
+            document.getElementById('result-title').textContent = data.title;
+            document.getElementById('result-desc').textContent = data.description;
+            showScreen('screen-result');
+        }
+
+        function shareResult() {
+            const data = resultData[currentResult];
+            const message = `Мой теневой архетип — ${data.title}. Узнай свой: https://vk.com/app${APP_ID}`;
+            vkBridge.send('VKWebAppShareWall', { message: message, attachments: '' })
+                .catch(err => console.log('Share error:', err));
+        }
+
+        function buyPremium() {
+            const data = resultData[currentResult];
+            vkBridge.send('VKWebAppOpenPayForm', {
+                app_id: APP_ID,
+                action: 'pay-to-service',
+                params: {
+                    item_name: `Полный разбор архетипа ${data.title}`,
+                    item_price: 7,
+                    item_currency: 'votes'
+                }
+            })
+            .then(result => {
+                if (result && result.result) {
+                    document.getElementById('premium-text').innerHTML = data.premium;
+                    showScreen('screen-premium');
+                }
+            })
+            .catch(err => console.log('Payment error:', err));
+        }
+
+        function restartQuiz() {
+            for (let key in scores) scores[key] = 0;
+            currentResult = null;
+            showScreen('screen-start');
+        }
+
+        const resultData = {
+            trickster: {
+                title: 'Трикстер (Манипулятор, Провокатор)',
+                description: 'Ты — Трикстер. Хаос — твоя стихия, а улыбка — твой щит. Ты видишь слабости людей как шахматную доску и умеешь быть на три хода впереди. Твоя сила: неподражаемое обаяние и острый ум, способный разобрать любую систему на винтики. Твоя Тень: иногда ты играешь ради игры, забывая о чувствах других, и рискуешь запутаться в собственных паутинах.',
+                image: 'images/trikster.jpg',
+                premium: `Как ты любишь: Тебе нужен партнёр-вдохновение, который не даст заскучать. Ты влюбляешь через интеллектуальные дуэли и искромётный юмор, но боишься настоящей близости, прикрываясь масками.
+			  Идеальная профессия: Переговорщик, креативный директор, хакер (белый или не очень), стендап-комик, кризис-менеджер. Там, где нужна импровизация, ты — король.
+                          Твой идеальный партнёр среди Теней: Кукловод — вы сплетёте гениальные интриги. Анахорет — будет твоим тихим убежищем и голосом совести.
+			  Совет Тени на этот месяц: Перестань проверять людей на прочность ради забавы. Одна искренняя беседа принесёт больше пользы, чем десять блестящих розыгрышей.
+			  Бонус: Плейлист «Саундтрек Трикстера» (джаз, инди-рок с ироничными текстами) и фильм «Бойцовский клуб» (режиссёрская версия).`
+            },
+            anchorite: {
+                title: 'Анахорет (Отшельник)',
+                description: 'Ты — Анахорет. Твоя сила не в толпе, а в тишине. Ты не бежишь от людей, ты просто черпаешь энергию в уединении, потому что твой внутренний мир глубже, чем океан. Сила: абсолютная самодостаточность и мудрость, которую не поколебать чужим мнением. Тень: мир может забыть о тебе, а ты рискуешь потерять связь с реальностью, предпочтя ей удобную скорлупу.',
+                image: 'images/anaxoret.jpg',
+                premium: `Как ты любишь: Ты — самый верный и глубокий партнёр, но тебе нужен тот, кто поймёт твоё молчание. Ты выражаешь чувства поступками, а не словами, и не терпишь драмы.
+			  Идеальная профессия: Аналитик, писатель, программист-фрилансер, исследователь, музейный хранитель, лесник. Любая работа, где можно уйти в «поток» без микроменеджмента.
+			  Идеальный партнёр: Оракул — будет говорить с тобой без слов. Некромант — оценит твою глубину и не испугается теней.
+			  Совет Тени: В этом месяце позволь одному человеку войти в твою башню. Не насовсем, просто на чай. Ты удивишься, как это обогатит твои мысли.
+			  Бонус: Плейлист «Музыка для глубины» (эмбиент, неоклассика, звуки дождя) и книга «Сто лет одиночества» Маркеса.`
+            },
+            berserker: {
+                title: 'Берсерк (Воин Хаоса)',
+                description: 'Ты — Берсерк. В тебе дремлет вулкан. Ты милый и обходительный, пока не трогают тех, кого ты любишь, или не предают твои ценности. Тогда ты сметаешь всё на пути, действуя на чистой интуиции и ярости. Сила: несокрушимая воля, смелость и готовность защищать. Тень: ты можешь не рассчитать силу и ранить тех, кто просто оказался рядом в момент гнева.',
+                image: 'images/berserk.jpg',
+                premium: `Как ты любишь: Страстно, ревностно, до гроба. Ты — защитник и добытчик. Твоему партнёру нужно быть готовым к эмоциональным американским горкам и знать, что ради него ты порвёшь любого.
+			  Идеальная профессия: Антикризисный управляющий, военный, пожарный, хирург, спортсмен экстремальных видов, предприниматель-новатор, который ломает рынки.
+			  Идеальный партнёр: Некромант — поймёт твою боль и превратит её в мудрость. Трикстер — остудит твой гнев иронией и уведёт от драки в приключение.
+			  Совет Тени: Прежде чем крушить, сосчитай до пяти. Твоя ярость — это священный огонь, не разбрасывай его на мелочи.
+			  Бонус: Плейлист «Ярость и Перезагрузка» (тяжёлый рок, эпичный саундтрек, скандинавский фолк) и фильм «Безумный Макс: Дорога ярости».`
+            },
+            puppeteer: {
+                title: 'Кукловод (Архитектор)',
+                description: 'Ты — Кукловод. Реальность — это сложный механизм, и ты знаешь, где какая шестерёнка. Ты не всегда в центре внимания, но именно твои решения двигают проекты, людей и целые компании вперёд. Сила: стратегическое мышление и контроль над хаосом. Тень: ты рискуешь начать видеть в людях только функции, забывая, что у них есть сердца.',
+                image: 'images/kuklovod.jpg',
+                premium: `Как ты любишь: Ты строишь отношения как проект: с чёткими целями и этапами. Тебе нужен партнёр, которому ты можешь доверять «управление тылом», но иногда полезно просто отпустить контроль и отдаться чувствам.
+			  Идеальная профессия: Продюсер, руководитель высшего звена, архитектор IT-систем, политтехнолог, режиссёр, гейм-дизайнер, который создаёт миры.
+			  Идеальный партнёр: Трикстер — внесёт творческий хаос в твои планы. Оракул — подскажет верный путь, когда логика бессильна.
+			  Совет Тени: Перестань продумывать план «Б» для воскресного ужина. Искренний смех и спонтанные объятия стоят дороже идеально выполненной презентации.
+			  Бонус: Плейлист «Музыка для стратега» (классика, сложный джаз, минимал-техно) и сериал «Карточный домик» (первые сезоны).`
+            },
+            oracle: {
+                title: 'Оракул (Видящий)',
+                description: 'Ты — Оракул. Ты видишь мир не так, как остальные: для тебя он соткан из знаков, совпадений и скрытых связей. Ты интуитивно чувствуешь ложь и можешь предсказать, чем кончится та или иная история. Сила: глубокая эмпатия и доступ к информационному полю. Тень: твои пророчества могут пугать, а знание — изолировать от «обычных» людей, живущих иллюзиями.',
+                image: 'images/oracul.jpg',
+                premium: `Как ты любишь: Ты ищешь родственную душу, с которой можно молчать об одном и том же. Ты заботлив, но иногда слишком «видишь» партнёра насквозь, лишая его права на тайну.
+			  Идеальная профессия: Психолог, аналитик трендов, учёный-футуролог, писатель-фантаст, консультант по стратегиям, астролог (если веришь в это).
+			  Идеальный партнёр: Анахорет — разделит твою тишину. Кукловод — поможет воплотить видения в реальные схемы.
+			  Совет Тени: Не говори людям правду, к которой они не готовы. Иногда лучше просто побыть рядом.
+			  Бонус: Плейлист «Звуки Вселенной» (этническая музыка, пение мантр, космический эмбиент) и книга «О дивный новый мир» Хаксли.`
+            },
+            necromancer: {
+                title: 'Некромант (Алхимик)',
+                description: 'Ты — Некромант. Ты тот, кто прошёл через личный ад и вернулся с дарами. Ты умеешь превращать страдания в мудрость, а потери — в силу. Рядом с тобой люди чувствуют, что даже из пепла можно восстать. Сила: невероятная жизнестойкость и способность исцелять души. Тень: иногда ты слишком зацикливаешься на прошлом, отказываясь жить настоящим.',
+                image: 'images/necromant.jpg',
+                premium: `Как ты любишь: Ты любишь глубоко и трагично, понимая цену момента. Ты — идеальный партнёр для того, кто пережил кризис и нуждается в бережном возрождении. Но не становись «спасателем» для тех, кто не хочет спасаться.
+			  Идеальная профессия: Врач, психотерапевт, кризисный коуч, писатель в жанре автофикшн, создатель мемориальных проектов, ритуальный агент (да, это важно и нужно).
+			  Идеальный партнёр: Берсерк — ты направишь его огонь в нужное русло. Анахорет — вы вместе создадите уютный мир двоих, где лечат раны.
+			  Совет Тени: Прекрати винить себя за то, что не смог спасти всех. В этом месяце разреши себе просто быть счастливым.
+			  Бонус: Плейлист «Возрождение» (пост-рок, меланхоличное инди, виолончель) и книга «Человек в поисках смысла» Виктора Франкла.`
+            }
+        };
+    </script>
+</body>
+</html>
