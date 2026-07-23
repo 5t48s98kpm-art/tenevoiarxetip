@@ -283,16 +283,21 @@
             .catch(err => console.log('Story error:', err));
         }
 
-          function buyPremium() {
+            function buyPremium() {
             const data = resultData[currentResult];
-            const itemName = 'Archetype_' + currentResult; 
-            
+            if (!data) return;
+
+            // Название товара — строго латиница (Archetype_trickster)
+            const itemName = 'Archetype_' + currentResult;
+
             vkBridge.send('VKWebAppOpenPayForm', {
                 app_id: APP_ID,
                 action: 'pay-to-service',
-                item_name: itemName,
-                item_price: 7,
-                item_currency: 'votes'
+                params: {
+                    item_name: itemName,
+                    item_price: 7, // ВАЖНО: число 7, не строка "7"!
+                    item_currency: 'votes'
+                }
             })
             .then(result => {
                 if (result && result.result) {
