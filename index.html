@@ -285,14 +285,15 @@
 
          function buyPremium() {
             const data = resultData[currentResult];
-            const itemName = 'Archetype_' + currentResult; 
-            
+            const itemName = 'Archetype_' + currentResult; // Без пробелов, чтобы избежать проблем с кодировкой
             vkBridge.send('VKWebAppOpenPayForm', {
                 app_id: APP_ID,
                 action: 'pay-to-service',
-                item_name: itemName,
-                item_price: 7,
-                item_currency: 'votes'
+                params: {
+                    item_name: itemName,
+                    item_price: 7,
+                    item_currency: 'votes'
+                }
             })
             .then(result => {
                 if (result && result.result) {
