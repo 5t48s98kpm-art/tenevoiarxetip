@@ -277,14 +277,13 @@
             const message = `Мой теневой архетип — ${data.title}. Узнай свой: https://vk.com/app${APP_ID}`;
             vkBridge.send('VKWebAppShowStoryBox', {
                 background_type: 'image',
-                url: 'https://5148s98kpm-art.github.io/tenevoiarxetip/images/cover.jpg', // Фон истории
+                url: 'https://5148s98kpm-art.github.io/tenevoiarxetip/images/cover.jpg',
                 message: message
             })
             .catch(err => console.log('Story error:', err));
         }
 
         function buyPremium() {
-            function buyPremium() {
             const data = resultData[currentResult];
             const itemName = 'Archetype_' + currentResult; 
             vkBridge.send('VKWebAppOpenPayForm', {
@@ -292,7 +291,7 @@
                 action: 'pay-to-service',
                 params: {
                     item_name: itemName,
-                    item_price: 49, // или ваша цена
+                    item_price: 7, 
                     item_currency: 'votes'
                 }
             })
