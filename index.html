@@ -212,7 +212,10 @@
     <script>
         const APP_ID = 54687803;
 
-        vkBridge.send('VKWebAppInit');
+        // Защита от ошибок, если библиотека VK Bridge не загрузилась
+        if (typeof vkBridge !== 'undefined') {
+            vkBridge.send('VKWebAppInit');
+        }
 
         const scores = {
             trickster: 0,
@@ -283,7 +286,7 @@
             .catch(err => console.log('Story error:', err));
         }
 
-               function buyPremium() {
+        function buyPremium() {
             const data = resultData[currentResult];
             if (!data) return;
 
@@ -294,9 +297,9 @@
                 action: 'pay-to-service',
                 params: {
                     item_name: itemName,
+                    item_id: 'full_breakdown', // Добавлено для точной идентификации товара
                     item_price: 7,
                     item_currency: 'votes'
-                    // custom_user_id удалён!
                 }
             })
             .then(result => {
