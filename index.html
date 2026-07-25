@@ -92,6 +92,11 @@
             margin: 0 auto 20px;
             background-color: #0a0a0f;
         }
+        #ad-timer {
+            font-size: 1.5rem;
+            color: #f5c842;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -187,10 +192,12 @@
             </div>
         </div>
 
+        <!-- ОБНОВЛЕННЫЙ ЭКРАН ЗАГРУЗКИ С ТАЙМЕРОМ -->
         <div class="screen" id="screen-loading">
             <img src="images/over.jpg" alt="Ожидание" class="loading-image">
-            <div class="loading">⏳ Тени сгущаются… Мы снимаем покров…</div>
-            <p class="small">Сейчас будет показано короткое видео, чтобы открыть результат.</p>
+            <div class="loading" style="margin-bottom: 5px;">⏳ Тени сгущаются… Мы снимаем покров…</div>
+            <div id="ad-timer">5</div>
+            <p class="small" style="margin-top: 5px;">Тестовый просмотр рекламы. Эмуляция.</p>
         </div>
 
         <div class="screen" id="screen-result">
@@ -258,10 +265,36 @@
             return winner;
         }
 
+        // ОБНОВЛЕННАЯ ФУНКЦИЯ ПОКАЗА РЕКЛАМЫ С ТАЙМЕРОМ
         function showRewardedVideo() {
+            let seconds = 5;
+            const timerEl = document.getElementById('ad-timer');
+            
+            // Обратный отсчет для пользователя
+            const countdown = setInterval(() => {
+                seconds--;
+                if(timerEl) timerEl.textContent = seconds;
+                if(seconds <= 0) clearInterval(countdown);
+            }, 1000);
+
+            // Основной таймер переключения на результат
+            let timeout = setTimeout(() => {
+                clearInterval(countdown);
+                if(timerEl) timerEl.textContent = "Готово!";
+                setTimeout(showResult, 300);
+            }, 5000);
+
             vkBridge.send('VKWebAppShowRewardedVideo')
-                .then(() => { showResult(); })
-                .catch(() => { showResult(); });
+                .then(() => {
+                    clearTimeout(timeout);
+                    clearInterval(countdown);
+                    showResult();
+                })
+                .catch(() => {
+                    clearTimeout(timeout);
+                    clearInterval(countdown);
+                    showResult();
+                });
         }
 
         function showResult() {
