@@ -283,7 +283,7 @@
             .catch(err => console.log('Story error:', err));
         }
 
-            function buyPremium() {
+               function buyPremium() {
             const data = resultData[currentResult];
             if (!data) return;
 
@@ -292,9 +292,11 @@
             vkBridge.send('VKWebAppOpenPayForm', {
                 app_id: APP_ID,
                 action: 'pay-to-service',
-                item_name: itemName,     // Без вложенности в params
-                item_price: 7,           // Без вложенности в params
-                item_currency: 'votes'   // Без вложенности в params
+                params: {
+                    item_name: itemName,
+                    item_price: 7,
+                    item_currency: 'votes'
+                }
             })
             .then(result => {
                 if (result && result.result) {
@@ -302,7 +304,11 @@
                     showScreen('screen-premium');
                 }
             })
-            .catch(err => console.log('Payment error:', err));
+            .catch(err => {
+                console.log('Payment error:', err);
+                // Если ошибка, можно показать пользователю всплывающее окно
+                // alert('Ошибка оплаты. Попробуйте позже.');
+            });
         }
 
         function restartQuiz() {
