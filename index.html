@@ -295,7 +295,8 @@
                 params: {
                     item_name: itemName,
                     item_price: 7,
-                    item_currency: 'votes'
+                    item_currency: 'votes',
+                    custom_user_id: '153422390' // <--- ВАЖНО: исправляет ошибку
                 }
             })
             .then(result => {
@@ -305,9 +306,9 @@
                 }
             })
             .catch(err => {
-                console.log('Payment error:', err);
-                // Если ошибка, можно показать пользователю всплывающее окно
-                // alert('Ошибка оплаты. Попробуйте позже.');
+                // Ловим и выводим детали ошибки, чтобы модератор или мы точно знали, что случилось
+                console.error('VK Pay Error:', err);
+                if (err.error_data) console.error('Error data:', err.error_data);
             });
         }
 
