@@ -297,9 +297,10 @@
                 action: 'pay-to-service',
                 params: {
                     item_name: itemName,
-                    item_id: 'full_breakdown', // Добавлено для точной идентификации товара
+                    item_id: 'full_breakdown',
                     item_price: 7,
-                    item_currency: 'votes'
+                    item_currency: 'votes',
+                    custom_user_id: 'user_' + Date.now() // Передаём строку для устранения ошибки фрейма
                 }
             })
             .then(result => {
