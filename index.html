@@ -344,8 +344,8 @@
                 }
             } catch (e) {}
 
-            // !!! ВОТ ЭТА ССЫЛКА С @main !!!
-            const okImageUrl = 'https://cdn.jsdelivr.net/gh/5148s98kpm-art/tenevoiarxetip@main/images/cover.jpg';
+            // Ссылка через raw.githubusercontent.com (работает всегда и без CORS)
+            const okImageUrl = 'https://raw.githubusercontent.com/5148s98kpm-art/tenevoiarxetip/main/images/cover.jpg';
 
             if (isOk) {
                 await vkBridge.send('VKWebAppShowStoryBox', {
