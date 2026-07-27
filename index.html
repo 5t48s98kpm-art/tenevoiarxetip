@@ -330,7 +330,6 @@
             
             let isOk = false;
             try {
-                // Ждём ответа от VK Bridge, чтобы точно узнать платформу
                 const launchParams = await vkBridge.send('VKWebAppGetLaunchParams');
                 if (launchParams && launchParams.vk_platform && launchParams.vk_platform.includes('_ok')) {
                     isOk = true;
@@ -340,8 +339,9 @@
             }
 
             if (isOk) {
-                // Одноклассники: ТОЛЬКО текст, без фона и картинок
+                // Одноклассники: Текст + прозрачный фон (чтобы пройти валидацию)
                 await vkBridge.send('VKWebAppShowStoryBox', {
+                    background_type: 'none',
                     message: message
                 }).catch(err => console.log('Story error (OK):', err));
             } else {
