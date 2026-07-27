@@ -325,24 +325,32 @@
     }
 
     function shareResult() {
-    const data = resultData[currentResult];
-    const message = `Мой теневой архетип — ${data.title}. Узнай свой: https://vk.com/app${APP_ID}`;
-    const isOk = platform.includes('_ok');
-    
-    if (isOk) {
-        // Для Одноклассников: только текст, без фона и картинок
-        vkBridge.send('VKWebAppShowStoryBox', {
-            message: message
-        }).catch(err => console.log('Story error (OK):', err));
-    } else {
-        // Для ВКонтакте: с картинкой (как было раньше)
-        vkBridge.send('VKWebAppShowStoryBox', {
-            background_type: 'image',
-            url: 'https://5148s98kpm-art.github.io/tenevoiarxetip/images/cover.jpg',
-            message: message
-        }).catch(err => console.log('Story error (VK):', err));
-    }
-}
+            const data = resultData[currentResult];
+            const message = `Мой теневой архетип — ${data.title}. Узнай свой: https://vk.com/app${APP_ID}`;
+            
+            // Безопасное определение платформы прямо здесь
+            let isOk = false;
+            try {
+                // Проверяем, является ли это Одноклассниками через VK Bridge
+                if (platform.includes('_ok')) {
+                    isOk = true;
+                }
+            } catch(e) { /* Если не удалось определить, считаем ВК */ }
+
+            if (isOk) {
+                // Для Одноклассников: только текст! Без фона, без картинок.
+                vkBridge.send('VKWebAppShowStoryBox', {
+                    message: message
+                }).catch(err => console.log('Story error (OK):', err));
+            } else {
+                // Для ВКонтакте: с картинкой
+                vkBridge.send('VKWebAppShowStoryBox', {
+                    background_type: 'image',
+                    url: 'https://5148s98kpm-art.github.io/tenevoiarxetip/images/cover.jpg',
+                    message: message
+                }).catch(err => console.log('Story error (VK):', err));
+            }
+        }
 
     function buyPremium() {
         const data = resultData[currentResult];
