@@ -344,8 +344,12 @@
                 }
             } catch (e) {}
 
-            // Ссылка через raw.githubusercontent.com (работает всегда и без CORS)
-            const okImageUrl = 'https://raw.githubusercontent.com/5148s98kpm-art/tenevoiarxetip/main/images/cover.jpg';
+            // Твоя рабочая ссылка для VK
+            const rawUrl = 'https://5148s98kpm-art.github.io/tenevoiarxetip/images/cover.jpg';
+            
+            // Если это Одноклассники, мы пропускаем ссылку через CORS-прокси, чтобы обойти блокировку.
+            // Если прокси не сработает, используем твой старый вариант с raw.githubusercontent.com (на всякий случай).
+            const okImageUrl = isOk ? 'https://api.allorigins.win/raw?url=' + encodeURIComponent(rawUrl) : rawUrl;
 
             if (isOk) {
                 await vkBridge.send('VKWebAppShowStoryBox', {
@@ -356,7 +360,7 @@
             } else {
                 await vkBridge.send('VKWebAppShowStoryBox', {
                     background_type: 'image',
-                    url: 'https://5148s98kpm-art.github.io/tenevoiarxetip/images/cover.jpg',
+                    url: rawUrl,
                     message: message
                 }).catch(err => console.log('Story error (VK):', err));
             }
