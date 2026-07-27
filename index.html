@@ -217,214 +217,234 @@
     </div>
 
     <script>
-        const APP_ID = 54687803;
+    const APP_ID = 54687803;
 
-        // Защита от ошибок, если библиотека VK Bridge не загрузилась
-        if (typeof vkBridge !== 'undefined') {
-            vkBridge.send('VKWebAppInit');
-        }
+    // Защита от ошибок, если библиотека VK Bridge не загрузилась
+    if (typeof vkBridge !== 'undefined') {
+        vkBridge.send('VKWebAppInit');
+    }
 
-        const scores = {
-            trickster: 0,
-            anchorite: 0,
-            berserker: 0,
-            puppeteer: 0,
-            oracle: 0,
-            necromancer: 0
-        };
+    // Определение платформы
+    let platform = 'vk'; // по умолчанию ВК
+    vkBridge.send('VKWebAppGetLaunchParams')
+        .then(data => {
+            if (data.vk_platform && data.vk_platform.includes('_ok')) {
+                platform = 'ok';
+            }
+        })
+        .catch(() => {
+            // если не удалось определить, остаётся ВК
+        });
 
-        let currentResult = null;
+    const scores = {
+        trickster: 0,
+        anchorite: 0,
+        berserker: 0,
+        puppeteer: 0,
+        oracle: 0,
+        necromancer: 0
+    };
 
-        function showScreen(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            const target = document.getElementById(id);
-            if (target) {
-                target.classList.add('active');
-                if (id === 'screen-loading') {
-                    setTimeout(showRewardedVideo, 2000);
-                }
+    let currentResult = null;
+
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        const target = document.getElementById(id);
+        if (target) {
+            target.classList.add('active');
+            if (id === 'screen-loading') {
+                setTimeout(showRewardedVideo, 2000);
             }
         }
+    }
 
-        function addScore(category, points, nextScreen) {
-            if (scores.hasOwnProperty(category)) {
-                scores[category] += points;
-            }
-            showScreen(nextScreen);
+    function addScore(category, points, nextScreen) {
+        if (scores.hasOwnProperty(category)) {
+            scores[category] += points;
         }
+        showScreen(nextScreen);
+    }
 
-        function getWinner() {
-            let max = -1;
-            let winner = 'anchorite';
-            for (let key in scores) {
-                if (scores[key] > max) {
-                    max = scores[key];
-                    winner = key;
-                }
+    function getWinner() {
+        let max = -1;
+        let winner = 'anchorite';
+        for (let key in scores) {
+            if (scores[key] > max) {
+                max = scores[key];
+                winner = key;
             }
-            return winner;
         }
+        return winner;
+    }
 
-       function showRewardedVideo() {
-            const startTime = Date.now();
-            let seconds = 5;
-            const timerEl = document.getElementById('ad-timer');
+    function showRewardedVideo() {
+        const startTime = Date.now();
+        let seconds = 5;
+        const timerEl = document.getElementById('ad-timer');
+        if(timerEl) timerEl.textContent = seconds;
+
+        let countdownFinished = false;
+
+        const countdown = setInterval(() => {
+            seconds--;
             if(timerEl) timerEl.textContent = seconds;
-
-            let countdownFinished = false;
-
-            // Запускаем обратный отсчет
-            const countdown = setInterval(() => {
-                seconds--;
-                if(timerEl) timerEl.textContent = seconds;
-                if(seconds <= 0) {
-                    clearInterval(countdown);
-                    countdownFinished = true;
-                    if(timerEl) timerEl.textContent = "Готово!";
-                    setTimeout(showResult, 300);
-                }
-            }, 1000);
-
-            // Функция, которая завершает эмуляцию ровно через 5 секунд (или сразу, если прошло > 5 сек)
-            function finishEmulation() {
-                if(countdownFinished) return; // Если таймер уже закончился, ничего не делаем
-
-                const elapsed = Date.now() - startTime;
-                const remaining = Math.max(0, 5000 - elapsed); // Сколько мс осталось до 5 секунд
-
+            if(seconds <= 0) {
                 clearInterval(countdown);
-
-                // Ждем оставшееся время, чтобы завершить эмуляцию
-                setTimeout(() => {
-                    countdownFinished = true;
-                    if(timerEl) timerEl.textContent = "Готово!";
-                    setTimeout(showResult, 300);
-                }, remaining);
+                countdownFinished = true;
+                if(timerEl) timerEl.textContent = "Готово!";
+                setTimeout(showResult, 300);
             }
+        }, 1000);
 
-            // Запускаем реальную рекламу (в тестовом режиме она сработает мгновенно)
-            vkBridge.send('VKWebAppShowRewardedVideo')
-                .then(finishEmulation)
-                .catch(finishEmulation);
+        function finishEmulation() {
+            if(countdownFinished) return;
+            const elapsed = Date.now() - startTime;
+            const remaining = Math.max(0, 5000 - elapsed);
+            clearInterval(countdown);
+            setTimeout(() => {
+                countdownFinished = true;
+                if(timerEl) timerEl.textContent = "Готово!";
+                setTimeout(showResult, 300);
+            }, remaining);
         }
 
-        function showResult() {
-            const winner = getWinner();
-            currentResult = winner;
-            const data = resultData[winner];
-            if (!data) return;
-            document.getElementById('result-img').src = data.image;
-            document.getElementById('result-title').textContent = data.title;
-            document.getElementById('result-desc').textContent = data.description;
-            showScreen('screen-result');
-        }
+        vkBridge.send('VKWebAppShowRewardedVideo')
+            .then(finishEmulation)
+            .catch(finishEmulation);
+    }
 
-        function shareResult() {
-            const data = resultData[currentResult];
-            const message = `Мой теневой архетип — ${data.title}. Узнай свой: https://vk.com/app${APP_ID}`;
+    function showResult() {
+        const winner = getWinner();
+        currentResult = winner;
+        const data = resultData[winner];
+        if (!data) return;
+        document.getElementById('result-img').src = data.image;
+        document.getElementById('result-title').textContent = data.title;
+        document.getElementById('result-desc').textContent = data.description;
+        showScreen('screen-result');
+    }
+
+    function shareResult() {
+        const data = resultData[currentResult];
+        const message = `Мой теневой архетип — ${data.title}. Узнай свой: https://vk.com/app${APP_ID}`;
+        
+        // Определяем, на какой платформе мы находимся
+        const isOk = platform.includes('_ok');
+        
+        // Для Одноклассников используем цветной фон без картинки
+        if (isOk) {
+            vkBridge.send('VKWebAppShowStoryBox', {
+                background_type: 'color',
+                background_color: '#0a0a0f',
+                message: message
+            }).catch(err => console.log('Story error (OK):', err));
+        } else {
+            // Для ВК оставляем с картинкой
             vkBridge.send('VKWebAppShowStoryBox', {
                 background_type: 'image',
                 url: 'https://5148s98kpm-art.github.io/tenevoiarxetip/images/cover.jpg',
                 message: message
-            })
-            .catch(err => console.log('Story error:', err));
+            }).catch(err => console.log('Story error (VK):', err));
         }
+    }
 
-        function buyPremium() {
-            const data = resultData[currentResult];
-            if (!data) return;
+    function buyPremium() {
+        const data = resultData[currentResult];
+        if (!data) return;
 
-            const itemName = 'Archetype_' + currentResult;
+        const itemName = 'Archetype_' + currentResult;
+        // Выбираем валюту в зависимости от платформы
+        const currency = platform.includes('_ok') ? 'coins' : 'votes';
 
-            vkBridge.send('VKWebAppOpenPayForm', {
-                app_id: APP_ID,
-                action: 'pay-to-service',
-                params: {
-                    item_name: itemName,
-                    item_id: 'full_breakdown',
-                    item_price: 7,
-                    item_currency: 'votes'
-                }
-            })
-            .then(result => {
-                if (result && result.result) {
-                    document.getElementById('premium-text').innerHTML = data.premium;
-                    showScreen('screen-premium');
-                }
-            })
-            .catch(err => {
-                console.error('Payment error:', err);
-            });
-        }
+        vkBridge.send('VKWebAppOpenPayForm', {
+            app_id: APP_ID,
+            action: 'pay-to-service',
+            params: {
+                item_name: itemName,
+                item_id: 'full_breakdown',
+                item_price: 7,
+                item_currency: currency
+            }
+        })
+        .then(result => {
+            if (result && result.result) {
+                document.getElementById('premium-text').innerHTML = data.premium;
+                showScreen('screen-premium');
+            }
+        })
+        .catch(err => {
+            console.error('Payment error:', err);
+        });
+    }
 
-        function restartQuiz() {
-            for (let key in scores) scores[key] = 0;
-            currentResult = null;
-            showScreen('screen-start');
-        }
+    function restartQuiz() {
+        for (let key in scores) scores[key] = 0;
+        currentResult = null;
+        showScreen('screen-start');
+    }
 
-        const resultData = {
-            trickster: {
-                title: 'Трикстер (Манипулятор, Провокатор)',
-                description: 'Ты — Трикстер. Хаос — твоя стихия, а улыбка — твой щит. Ты видишь слабости людей как шахматную доску и умеешь быть на три хода впереди. Твоя сила: неподражаемое обаяние и острый ум, способный разобрать любую систему на винтики. Твоя Тень: иногда ты играешь ради игры, забывая о чувствах других, и рискуешь запутаться в собственных паутинах.',
-                image: 'images/trikster.jpg',
-                premium: `Как ты любишь: Тебе нужен партнёр-вдохновение, который не даст заскучать. Ты влюбляешь через интеллектуальные дуэли и искромётный юмор, но боишься настоящей близости, прикрываясь масками.
+    const resultData = {
+        trickster: {
+            title: 'Трикстер (Манипулятор, Провокатор)',
+            description: 'Ты — Трикстер. Хаос — твоя стихия, а улыбка — твой щит. Ты видишь слабости людей как шахматную доску и умеешь быть на три хода впереди. Твоя сила: неподражаемое обаяние и острый ум, способный разобрать любую систему на винтики. Твоя Тень: иногда ты играешь ради игры, забывая о чувствах других, и рискуешь запутаться в собственных паутинах.',
+            image: 'images/trikster.jpg',
+            premium: `Как ты любишь: Тебе нужен партнёр-вдохновение, который не даст заскучать. Ты влюбляешь через интеллектуальные дуэли и искромётный юмор, но боишься настоящей близости, прикрываясь масками.
 			  Идеальная профессия: Переговорщик, креативный директор, хакер (белый или не очень), стендап-комик, кризис-менеджер. Там, где нужна импровизация, ты — король.
                           Твой идеальный партнёр среди Теней: Кукловод — вы сплетёте гениальные интриги. Анахорет — будет твоим тихим убежищем и голосом совести.
 			  Совет Тени на этот месяц: Перестань проверять людей на прочность ради забавы. Одна искренняя беседа принесёт больше пользы, чем десять блестящих розыгрышей.
 			  Бонус: Плейлист «Саундтрек Трикстера» (джаз, инди-рок с ироничными текстами) и фильм «Бойцовский клуб» (режиссёрская версия).`
-            },
-            anchorite: {
-                title: 'Анахорет (Отшельник)',
-                description: 'Ты — Анахорет. Твоя сила не в толпе, а в тишине. Ты не бежишь от людей, ты просто черпаешь энергию в уединении, потому что твой внутренний мир глубже, чем океан. Сила: абсолютная самодостаточность и мудрость, которую не поколебать чужим мнением. Тень: мир может забыть о тебе, а ты рискуешь потерять связь с реальностью, предпочтя ей удобную скорлупу.',
-                image: 'images/anaxoret.jpg',
-                premium: `Как ты любишь: Ты — самый верный и глубокий партнёр, но тебе нужен тот, кто поймёт твоё молчание. Ты выражаешь чувства поступками, а не словами, и не терпишь драмы.
+        },
+        anchorite: {
+            title: 'Анахорет (Отшельник)',
+            description: 'Ты — Анахорет. Твоя сила не в толпе, а в тишине. Ты не бежишь от людей, ты просто черпаешь энергию в уединении, потому что твой внутренний мир глубже, чем океан. Сила: абсолютная самодостаточность и мудрость, которую не поколебать чужим мнением. Тень: мир может забыть о тебе, а ты рискуешь потерять связь с реальностью, предпочтя ей удобную скорлупу.',
+            image: 'images/anaxoret.jpg',
+            premium: `Как ты любишь: Ты — самый верный и глубокий партнёр, но тебе нужен тот, кто поймёт твоё молчание. Ты выражаешь чувства поступками, а не словами, и не терпишь драмы.
 			  Идеальная профессия: Аналитик, писатель, программист-фрилансер, исследователь, музейный хранитель, лесник. Любая работа, где можно уйти в «поток» без микроменеджмента.
 			  Идеальный партнёр: Оракул — будет говорить с тобой без слов. Некромант — оценит твою глубину и не испугается теней.
 			  Совет Тени: В этом месяце позволь одному человеку войти в твою башню. Не насовсем, просто на чай. Ты удивишься, как это обогатит твои мысли.
 			  Бонус: Плейлист «Музыка для глубины» (эмбиент, неоклассика, звуки дождя) и книга «Сто лет одиночества» Маркеса.`
-            },
-            berserker: {
-                title: 'Берсерк (Воин Хаоса)',
-                description: 'Ты — Берсерк. В тебе дремлет вулкан. Ты милый и обходительный, пока не трогают тех, кого ты любишь, или не предают твои ценности. Тогда ты сметаешь всё на пути, действуя на чистой интуиции и ярости. Сила: несокрушимая воля, смелость и готовность защищать. Тень: ты можешь не рассчитать силу и ранить тех, кто просто оказался рядом в момент гнева.',
-                image: 'images/berserk.jpg',
-                premium: `Как ты любишь: Страстно, ревностно, до гроба. Ты — защитник и добытчик. Твоему партнёру нужно быть готовым к эмоциональным американским горкам и знать, что ради него ты порвёшь любого.
+        },
+        berserker: {
+            title: 'Берсерк (Воин Хаоса)',
+            description: 'Ты — Берсерк. В тебе дремлет вулкан. Ты милый и обходительный, пока не трогают тех, кого ты любишь, или не предают твои ценности. Тогда ты сметаешь всё на пути, действуя на чистой интуиции и ярости. Сила: несокрушимая воля, смелость и готовность защищать. Тень: ты можешь не рассчитать силу и ранить тех, кто просто оказался рядом в момент гнева.',
+            image: 'images/berserk.jpg',
+            premium: `Как ты любишь: Страстно, ревностно, до гроба. Ты — защитник и добытчик. Твоему партнёру нужно быть готовым к эмоциональным американским горкам и знать, что ради него ты порвёшь любого.
 			  Идеальная профессия: Антикризисный управляющий, военный, пожарный, хирург, спортсмен экстремальных видов, предприниматель-новатор, который ломает рынки.
 			  Идеальный партнёр: Некромант — поймёт твою боль и превратит её в мудрость. Трикстер — остудит твой гнев иронией и уведёт от драки в приключение.
 			  Совет Тени: Прежде чем крушить, сосчитай до пяти. Твоя ярость — это священный огонь, не разбрасывай его на мелочи.
 			  Бонус: Плейлист «Ярость и Перезагрузка» (тяжёлый рок, эпичный саундтрек, скандинавский фолк) и фильм «Безумный Макс: Дорога ярости».`
-            },
-            puppeteer: {
-                title: 'Кукловод (Архитектор)',
-                description: 'Ты — Кукловод. Реальность — это сложный механизм, и ты знаешь, где какая шестерёнка. Ты не всегда в центре внимания, но именно твои решения двигают проекты, людей и целые компании вперёд. Сила: стратегическое мышление и контроль над хаосом. Тень: ты рискуешь начать видеть в людях только функции, забывая, что у них есть сердца.',
-                image: 'images/kuklovod.jpg',
-                premium: `Как ты любишь: Ты строишь отношения как проект: с чёткими целями и этапами. Тебе нужен партнёр, которому ты можешь доверять «управление тылом», но иногда полезно просто отпустить контроль и отдаться чувствам.
+        },
+        puppeteer: {
+            title: 'Кукловод (Архитектор)',
+            description: 'Ты — Кукловод. Реальность — это сложный механизм, и ты знаешь, где какая шестерёнка. Ты не всегда в центре внимания, но именно твои решения двигают проекты, людей и целые компании вперёд. Сила: стратегическое мышление и контроль над хаосом. Тень: ты рискуешь начать видеть в людях только функции, забывая, что у них есть сердца.',
+            image: 'images/kuklovod.jpg',
+            premium: `Как ты любишь: Ты строишь отношения как проект: с чёткими целями и этапами. Тебе нужен партнёр, которому ты можешь доверять «управление тылом», но иногда полезно просто отпустить контроль и отдаться чувствам.
 			  Идеальная профессия: Продюсер, руководитель высшего звена, архитектор IT-систем, политтехнолог, режиссёр, гейм-дизайнер, который создаёт миры.
 			  Идеальный партнёр: Трикстер — внесёт творческий хаос в твои планы. Оракул — подскажет верный путь, когда логика бессильна.
 			  Совет Тени: Перестань продумывать план «Б» для воскресного ужина. Искренний смех и спонтанные объятия стоят дороже идеально выполненной презентации.
 			  Бонус: Плейлист «Музыка для стратега» (классика, сложный джаз, минимал-техно) и сериал «Карточный домик» (первые сезоны).`
-            },
-            oracle: {
-                title: 'Оракул (Видящий)',
-                description: 'Ты — Оракул. Ты видишь мир не так, как остальные: для тебя он соткан из знаков, совпадений и скрытых связей. Ты интуитивно чувствуешь ложь и можешь предсказать, чем кончится та или иная история. Сила: глубокая эмпатия и доступ к информационному полю. Тень: твои пророчества могут пугать, а знание — изолировать от «обычных» людей, живущих иллюзиями.',
-                image: 'images/oracul.jpg',
-                premium: `Как ты любишь: Ты ищешь родственную душу, с которой можно молчать об одном и том же. Ты заботлив, но иногда слишком «видишь» партнёра насквозь, лишая его права на тайну.
+        },
+        oracle: {
+            title: 'Оракул (Видящий)',
+            description: 'Ты — Оракул. Ты видишь мир не так, как остальные: для тебя он соткан из знаков, совпадений и скрытых связей. Ты интуитивно чувствуешь ложь и можешь предсказать, чем кончится та или иная история. Сила: глубокая эмпатия и доступ к информационному полю. Тень: твои пророчества могут пугать, а знание — изолировать от «обычных» людей, живущих иллюзиями.',
+            image: 'images/oracul.jpg',
+            premium: `Как ты любишь: Ты ищешь родственную душу, с которой можно молчать об одном и том же. Ты заботлив, но иногда слишком «видишь» партнёра насквозь, лишая его права на тайну.
 			  Идеальная профессия: Психолог, аналитик трендов, учёный-футуролог, писатель-фантаст, консультант по стратегиям, астролог (если веришь в это).
 			  Идеальный партнёр: Анахорет — разделит твою тишину. Кукловод — поможет воплотить видения в реальные схемы.
 			  Совет Тени: Не говори людям правду, к которой они не готовы. Иногда лучше просто побыть рядом.
 			  Бонус: Плейлист «Звуки Вселенной» (этническая музыка, пение мантр, космический эмбиент) и книга «О дивный новый мир» Хаксли.`
-            },
-            necromancer: {
-                title: 'Некромант (Алхимик)',
-                description: 'Ты — Некромант. Ты тот, кто прошёл через личный ад и вернулся с дарами. Ты умеешь превращать страдания в мудрость, а потери — в силу. Рядом с тобой люди чувствуют, что даже из пепла можно восстать. Сила: невероятная жизнестойкость и способность исцелять души. Тень: иногда ты слишком зацикливаешься на прошлом, отказываясь жить настоящим.',
-                image: 'images/necromant.jpg',
-                premium: `Как ты любишь: Ты любишь глубоко и трагично, понимая цену момента. Ты — идеальный партнёр для того, кто пережил кризис и нуждается в бережном возрождении. Но не становись «спасателем» для тех, кто не хочет спасаться.
+        },
+        necromancer: {
+            title: 'Некромант (Алхимик)',
+            description: 'Ты — Некромант. Ты тот, кто прошёл через личный ад и вернулся с дарами. Ты умеешь превращать страдания в мудрость, а потери — в силу. Рядом с тобой люди чувствуют, что даже из пепла можно восстать. Сила: невероятная жизнестойкость и способность исцелять души. Тень: иногда ты слишком зацикливаешься на прошлом, отказываясь жить настоящим.',
+            image: 'images/necromant.jpg',
+            premium: `Как ты любишь: Ты любишь глубоко и трагично, понимая цену момента. Ты — идеальный партнёр для того, кто пережил кризис и нуждается в бережном возрождении. Но не становись «спасателем» для тех, кто не хочет спасаться.
 			  Идеальная профессия: Врач, психотерапевт, кризисный коуч, писатель в жанре автофикшн, создатель мемориальных проектов, ритуальный агент (да, это важно и нужно).
 			  Идеальный партнёр: Берсерк — ты направишь его огонь в нужное русло. Анахорет — вы вместе создадите уютный мир двоих, где лечат раны.
 			  Совет Тени: Прекрати винить себя за то, что не смог спасти всех. В этом месяце разреши себе просто быть счастливым.
 			  Бонус: Плейлист «Возрождение» (пост-рок, меланхоличное инди, виолончель) и книга «Человек в поисках смысла» Виктора Франкла.`
-            }
-        };
-    </script>
+        }
+    };
+</script>
 </body>
 </html>
