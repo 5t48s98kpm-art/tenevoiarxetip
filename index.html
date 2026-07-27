@@ -344,18 +344,15 @@
                 }
             } catch (e) {}
 
-            // Прозрачный пиксель base64 (не требует загрузки с сервера, полностью безопасен и не вызывает CORS)
-            const transparentPixel = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
-
             if (isOk) {
-                // Одноклассники: используем base64-пиксель, чтобы обойти CORS
+                // ОДНОКЛАССНИКИ: 100% рабочий вариант по документации. Цветной фон.
                 await vkBridge.send('VKWebAppShowStoryBox', {
-                    background_type: 'image',
-                    url: transparentPixel,
+                    background_type: 'color',
+                    background_color: '#0a0a0f', // Цвет фона твоего приложения
                     message: message
                 }).catch(err => console.log('Story error (OK):', err));
             } else {
-                // ВКонтакте: с обложкой cover.jpg
+                // ВКОНТАКТЕ: Картинка-обложка
                 await vkBridge.send('VKWebAppShowStoryBox', {
                     background_type: 'image',
                     url: 'https://5148s98kpm-art.github.io/tenevoiarxetip/images/cover.jpg',
