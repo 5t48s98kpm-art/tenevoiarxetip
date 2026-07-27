@@ -344,9 +344,11 @@
                 }
             } catch (e) {}
 
-            // Ссылка на сервер Одноклассников (CORS не блокирует)
-            const okImageUrl = 'https://cdn.jsdelivr.net/gh/5148s98kpm-art/tenevoiarxetip/images/cover.jpg'; {
-                // Одноклассники: картинка с их собственного CDN
+            // Ссылка через jsDelivr (CORS не блокирует)
+            const okImageUrl = 'https://cdn.jsdelivr.net/gh/5148s98kpm-art/tenevoiarxetip/images/cover.jpg';
+
+            if (isOk) {
+                // Одноклассники: картинка с GitHub через jsDelivr
                 await vkBridge.send('VKWebAppShowStoryBox', {
                     background_type: 'image',
                     url: okImageUrl,
