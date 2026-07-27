@@ -324,29 +324,29 @@
         showScreen('screen-result');
     }
 
-    function shareResult() {
+    async function shareResult() {
             const data = resultData[currentResult];
             const message = `Мой теневой архетип — ${data.title}. Узнай свой: https://vk.com/app${APP_ID}`;
             
-            // Мгновенно проверяем платформу без ожидания глобальных переменных
             let isOk = false;
             try {
-                const launchParams = vkBridge.send('VKWebAppGetLaunchParams');
+                // Ждём ответа от VK Bridge, чтобы точно узнать платформу
+                const launchParams = await vkBridge.send('VKWebAppGetLaunchParams');
                 if (launchParams && launchParams.vk_platform && launchParams.vk_platform.includes('_ok')) {
                     isOk = true;
                 }
             } catch (e) {
-                // Если ошибка, значит это не Одноклассники
+                console.log('Не удалось определить платформу:', e);
             }
 
             if (isOk) {
-                // Для Одноклассников: ТОЛЬКО текст. Никаких картинок и фонов.
-                vkBridge.send('VKWebAppShowStoryBox', {
+                // Одноклассники: ТОЛЬКО текст, без фона и картинок
+                await vkBridge.send('VKWebAppShowStoryBox', {
                     message: message
                 }).catch(err => console.log('Story error (OK):', err));
             } else {
-                // Для ВКонтакте: с картинкой (как было раньше)
-                vkBridge.send('VKWebAppShowStoryBox', {
+                // ВКонтакте: с картинкой
+                await vkBridge.send('VKWebAppShowStoryBox', {
                     background_type: 'image',
                     url: 'https://5148s98kpm-art.github.io/tenevoiarxetip/images/cover.jpg',
                     message: message
