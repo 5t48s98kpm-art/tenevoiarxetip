@@ -339,9 +339,10 @@
             }
 
             if (isOk) {
-                // Одноклассники: Текст + прозрачный фон (чтобы пройти валидацию)
+                // Одноклассники: Текст + цветной фон (гарантированно проходит валидацию)
                 await vkBridge.send('VKWebAppShowStoryBox', {
-                    background_type: 'none',
+                    background_type: 'color',
+                    background_color: '#0a0a0f', // Тёмный цвет фона вашего приложения
                     message: message
                 }).catch(err => console.log('Story error (OK):', err));
             } else {
