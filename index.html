@@ -265,36 +265,47 @@
             return winner;
         }
 
-        // ОБНОВЛЕННАЯ ФУНКЦИЯ ПОКАЗА РЕКЛАМЫ С ТАЙМЕРОМ
-        function showRewardedVideo() {
+       function showRewardedVideo() {
+            const startTime = Date.now();
             let seconds = 5;
             const timerEl = document.getElementById('ad-timer');
-            
-            // Обратный отсчет для пользователя
+            if(timerEl) timerEl.textContent = seconds;
+
+            let countdownFinished = false;
+
+            // Запускаем обратный отсчет
             const countdown = setInterval(() => {
                 seconds--;
                 if(timerEl) timerEl.textContent = seconds;
-                if(seconds <= 0) clearInterval(countdown);
+                if(seconds <= 0) {
+                    clearInterval(countdown);
+                    countdownFinished = true;
+                    if(timerEl) timerEl.textContent = "Готово!";
+                    setTimeout(showResult, 300);
+                }
             }, 1000);
 
-            // Основной таймер переключения на результат
-            let timeout = setTimeout(() => {
-                clearInterval(countdown);
-                if(timerEl) timerEl.textContent = "Готово!";
-                setTimeout(showResult, 300);
-            }, 5000);
+            // Функция, которая завершает эмуляцию ровно через 5 секунд (или сразу, если прошло > 5 сек)
+            function finishEmulation() {
+                if(countdownFinished) return; // Если таймер уже закончился, ничего не делаем
 
+                const elapsed = Date.now() - startTime;
+                const remaining = Math.max(0, 5000 - elapsed); // Сколько мс осталось до 5 секунд
+
+                clearInterval(countdown);
+
+                // Ждем оставшееся время, чтобы завершить эмуляцию
+                setTimeout(() => {
+                    countdownFinished = true;
+                    if(timerEl) timerEl.textContent = "Готово!";
+                    setTimeout(showResult, 300);
+                }, remaining);
+            }
+
+            // Запускаем реальную рекламу (в тестовом режиме она сработает мгновенно)
             vkBridge.send('VKWebAppShowRewardedVideo')
-                .then(() => {
-                    clearTimeout(timeout);
-                    clearInterval(countdown);
-                    showResult();
-                })
-                .catch(() => {
-                    clearTimeout(timeout);
-                    clearInterval(countdown);
-                    showResult();
-                });
+                .then(finishEmulation)
+                .catch(finishEmulation);
         }
 
         function showResult() {
