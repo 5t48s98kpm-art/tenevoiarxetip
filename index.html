@@ -332,7 +332,7 @@
             showScreen('screen-result');
         }
 
-         async function shareResult() {
+        async function shareResult() {
             const data = resultData[currentResult];
             const message = `Мой теневой архетип — ${data.title}. Узнай свой: https://vk.com/app${APP_ID}`;
             
@@ -344,30 +344,21 @@
                 }
             } catch (e) {}
 
-            // Единая ссылка на обложку
-            const imgUrl = 'https://5148s98kpm-art.github.io/tenevoiarxetip/images/cover.jpg';
+            // Прозрачный пиксель base64 (не требует загрузки с сервера, полностью безопасен и не вызывает CORS)
+            const transparentPixel = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
 
             if (isOk) {
-                // Одноклассники: пробуем загрузить обложку
+                // Одноклассники: используем base64-пиксель, чтобы обойти CORS
                 await vkBridge.send('VKWebAppShowStoryBox', {
                     background_type: 'image',
-                    url: imgUrl,
+                    url: transparentPixel,
                     message: message
-                }).catch(err => {
-                    console.log('Story error (OK):', err);
-                    // Если CORS заблокировал картинку, используем прозрачный пиксель как запасной вариант
-                    const transparentPixel = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
-                    vkBridge.send('VKWebAppShowStoryBox', {
-                        background_type: 'image',
-                        url: transparentPixel,
-                        message: message
-                    }).catch(e2 => console.log('Fallback error:', e2));
-                });
+                }).catch(err => console.log('Story error (OK):', err));
             } else {
-                // ВКонтакте: с обложкой
+                // ВКонтакте: с обложкой cover.jpg
                 await vkBridge.send('VKWebAppShowStoryBox', {
                     background_type: 'image',
-                    url: imgUrl,
+                    url: 'https://5148s98kpm-art.github.io/tenevoiarxetip/images/cover.jpg',
                     message: message
                 }).catch(err => console.log('Story error (VK):', err));
             }
