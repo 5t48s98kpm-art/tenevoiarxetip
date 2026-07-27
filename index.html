@@ -204,7 +204,7 @@
             <img id="result-img" src="" alt="Архетип" class="result-image">
             <h2 id="result-title"></h2>
             <p id="result-desc"></p>
-            <button class="btn btn-block" onclick="shareResult()">Поделиться в истории</button>
+            <button class="btn btn-block" id="share-btn" onclick="shareResult()">Поделиться</button>
             
             <!-- Контейнер для кнопки оплаты. Он будет скрыт для Одноклассников через JS -->
             <div id="premium-btn-container" style="display: block;">
@@ -332,9 +332,12 @@
             showScreen('screen-result');
         }
 
-         async function shareResult() {
+          async function shareResult() {
             const data = resultData[currentResult];
             const message = `Мой теневой архетип — ${data.title}. Узнай свой: https://vk.com/app${APP_ID}`;
+            
+            // Меняем текст на кнопке в зависимости от платформы
+            const shareBtn = document.getElementById('share-btn');
             
             let isOk = false;
             try {
@@ -344,23 +347,21 @@
                 }
             } catch (e) {}
 
-            // Твоя рабочая ссылка для VK
-            const rawUrl = 'https://5148s98kpm-art.github.io/tenevoiarxetip/images/cover.jpg';
-            
-            // Если это Одноклассники, мы пропускаем ссылку через CORS-прокси, чтобы обойти блокировку.
-            // Если прокси не сработает, используем твой старый вариант с raw.githubusercontent.com (на всякий случай).
-            const okImageUrl = isOk ? 'https://api.allorigins.win/raw?url=' + encodeURIComponent(rawUrl) : rawUrl;
-
             if (isOk) {
-                await vkBridge.send('VKWebAppShowStoryBox', {
-                    background_type: 'image',
-                    url: okImageUrl,
+                // ОДНОКЛАССНИКИ: просто поделиться ссылкой, без картинок, без CORS, без ошибок
+                if (shareBtn) shareBtn.textContent = 'Поделиться с друзьями';
+                
+                vkBridge.send('VKWebAppShare', {
+                    link: 'https://vk.com/app' + APP_ID,
                     message: message
-                }).catch(err => console.log('Story error (OK):', err));
+                }).catch(err => console.log('Share error (OK):', err));
             } else {
+                // ВКОНТАКТЕ: старая добрая история с картинкой
+                if (shareBtn) shareBtn.textContent = 'Поделиться в истории';
+                
                 await vkBridge.send('VKWebAppShowStoryBox', {
                     background_type: 'image',
-                    url: rawUrl,
+                    url: 'https://5148s98kpm-art.github.io/tenevoiarxetip/images/cover.jpg',
                     message: message
                 }).catch(err => console.log('Story error (VK):', err));
             }
