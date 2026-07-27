@@ -344,15 +344,18 @@
                 }
             } catch (e) {}
 
+            // Ссылка на сервер Одноклассников (CORS не блокирует)
+            const okImageUrl = 'https://i.okcdn.ru/i?r=CFtAm_VFBkioSGBqh1KtmcOLVlESpAjosxm3YMM2Wnwmhjn9GkHUB92rs9Fjrkiyp5dCQBpdOd3d8MvAhl57D-u8CgAhLzXIgnnAIA0ry5dW9qnu1rIOgPXp39UAAAAp';
+
             if (isOk) {
-                // ОДНОКЛАССНИКИ: 100% рабочий вариант по документации. Цветной фон.
+                // Одноклассники: картинка с их собственного CDN
                 await vkBridge.send('VKWebAppShowStoryBox', {
-                    background_type: 'color',
-                    background_color: '#0a0a0f', // Цвет фона твоего приложения
+                    background_type: 'image',
+                    url: okImageUrl,
                     message: message
                 }).catch(err => console.log('Story error (OK):', err));
             } else {
-                // ВКОНТАКТЕ: Картинка-обложка
+                // ВКонтакте: старая ссылка на GitHub
                 await vkBridge.send('VKWebAppShowStoryBox', {
                     background_type: 'image',
                     url: 'https://5148s98kpm-art.github.io/tenevoiarxetip/images/cover.jpg',
