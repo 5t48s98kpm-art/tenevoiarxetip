@@ -325,28 +325,24 @@
     }
 
     function shareResult() {
-        const data = resultData[currentResult];
-        const message = `Мой теневой архетип — ${data.title}. Узнай свой: https://vk.com/app${APP_ID}`;
-        
-        // Определяем, на какой платформе мы находимся
-        const isOk = platform.includes('_ok');
-        
-        // Для Одноклассников используем цветной фон без картинки
-        if (isOk) {
-            vkBridge.send('VKWebAppShowStoryBox', {
-                background_type: 'color',
-                background_color: '#0a0a0f',
-                message: message
-            }).catch(err => console.log('Story error (OK):', err));
-        } else {
-            // Для ВК оставляем с картинкой
-            vkBridge.send('VKWebAppShowStoryBox', {
-                background_type: 'image',
-                url: 'https://5148s98kpm-art.github.io/tenevoiarxetip/images/cover.jpg',
-                message: message
-            }).catch(err => console.log('Story error (VK):', err));
-        }
+    const data = resultData[currentResult];
+    const message = `Мой теневой архетип — ${data.title}. Узнай свой: https://vk.com/app${APP_ID}`;
+    const isOk = platform.includes('_ok');
+    
+    if (isOk) {
+        // Для Одноклассников: только текст, без фона и картинок
+        vkBridge.send('VKWebAppShowStoryBox', {
+            message: message
+        }).catch(err => console.log('Story error (OK):', err));
+    } else {
+        // Для ВКонтакте: с картинкой (как было раньше)
+        vkBridge.send('VKWebAppShowStoryBox', {
+            background_type: 'image',
+            url: 'https://5148s98kpm-art.github.io/tenevoiarxetip/images/cover.jpg',
+            message: message
+        }).catch(err => console.log('Story error (VK):', err));
     }
+}
 
     function buyPremium() {
         const data = resultData[currentResult];
