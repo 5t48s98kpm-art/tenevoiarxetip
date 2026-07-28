@@ -368,36 +368,19 @@
         }
 
         function buyPremium() {
-            // Если это Одноклассники, просто выходим (кнопка и так скрыта, но для безопасности)
-            if (platform.includes('_ok')) {
-                console.log('Покупка доступна только во ВКонтакте.');
-                return;
-            }
-
             const data = resultData[currentResult];
             if (!data) return;
 
-            const itemName = 'Archetype_' + currentResult;
-
-            vkBridge.send('VKWebAppOpenPayForm', {
-                app_id: APP_ID,
-                action: 'pay-to-service',
-                params: {
-                    item_name: itemName,
-                    item_id: 'full_breakdown',
-                    item_price: 7,
-                    item_currency: 'votes'
-                }
-            })
-            .then(result => {
+            // Вызов официального метода для голосов
+            vkBridge.send('VKWebAppShowOrderBox', {
+                type: 'item',
+                item: 'full_breakdown' // Должно совпадать с item_id в Cloudflare Worker
+            }).then(result => {
                 if (result && result.result) {
                     document.getElementById('premium-text').innerHTML = data.premium;
                     showScreen('screen-premium');
                 }
-            })
-            .catch(err => {
-                console.error('Payment error:', err);
-            });
+            }).catch(err => console.error('OrderBox error:', err));
         }
 
         function restartQuiz() {
