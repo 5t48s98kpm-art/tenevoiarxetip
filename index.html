@@ -341,11 +341,7 @@
 
         async function shareResult() {
             const data = resultData[currentResult];
-            const message = `Мой теневой архетип — ${data.title}. Узнай свой: https://vk.com/app${APP_ID}`;
-            
-            // Меняем текст на кнопке в зависимости от платформы
-            const shareBtn = document.getElementById('share-btn');
-            
+            let link = '';
             let isOk = false;
             try {
                 const launchParams = await vkBridge.send('VKWebAppGetLaunchParams');
@@ -353,19 +349,24 @@
                     isOk = true;
                 }
             } catch (e) {}
-
+            
+            const shareBtn = document.getElementById('share-btn');
             if (isOk) {
-                // ОДНОКЛАССНИКИ: просто поделиться ссылкой, без картинок, без CORS, без ошибок
+                link = 'https://ok.ru/app/512005186277'; // ID Одноклассников
                 if (shareBtn) shareBtn.textContent = 'Поделиться с друзьями';
-                
+            } else {
+                link = 'https://vk.com/app' + APP_ID; // ID ВКонтакте
+                if (shareBtn) shareBtn.textContent = 'Поделиться в истории';
+            }
+            
+            const message = `Мой теневой архетип — ${data.title}. Узнай свой: ${link}`;
+            
+            if (isOk) {
                 vkBridge.send('VKWebAppShare', {
-                    link: 'https://vk.com/app' + APP_ID,
+                    link: link,
                     message: message
                 }).catch(err => console.log('Share error (OK):', err));
             } else {
-                // ВКОНТАКТЕ: старая добрая история с картинкой
-                if (shareBtn) shareBtn.textContent = 'Поделиться в истории';
-                
                 await vkBridge.send('VKWebAppShowStoryBox', {
                     background_type: 'image',
                     url: 'https://5148s98kpm-art.github.io/tenevoiarxetip/images/cover.jpg',
