@@ -285,40 +285,47 @@
             return winner;
         }
 
-        function showRewardedVideo() {
-            const startTime = Date.now();
+        // Функция эмуляции рекламы (таймер), если реальная реклама недоступна
+        function startEmulation() {
             let seconds = 5;
             const timerEl = document.getElementById('ad-timer');
             if(timerEl) timerEl.textContent = seconds;
-
-            let countdownFinished = false;
 
             const countdown = setInterval(() => {
                 seconds--;
                 if(timerEl) timerEl.textContent = seconds;
                 if(seconds <= 0) {
                     clearInterval(countdown);
-                    countdownFinished = true;
                     if(timerEl) timerEl.textContent = "Готово!";
                     setTimeout(showResult, 300);
                 }
             }, 1000);
+        }
 
-            function finishEmulation() {
-                if(countdownFinished) return;
-                const elapsed = Date.now() - startTime;
-                const remaining = Math.max(0, 5000 - elapsed);
-                clearInterval(countdown);
-                setTimeout(() => {
-                    countdownFinished = true;
-                    if(timerEl) timerEl.textContent = "Готово!";
-                    setTimeout(showResult, 300);
-                }, remaining);
-            }
-
-            vkBridge.send('VKWebAppShowRewardedVideo')
-                .then(finishEmulation)
-                .catch(finishEmulation);
+        // Основная функция показа рекламы (строго по документации)
+        function showRewardedVideo() {
+            // 1. Проверяем, есть ли предзагруженная реклама
+            vkBridge.send('VKWebAppCheckNativeAds', { ad_format: 'reward' })
+                .then((data) => {
+                    if (data.result) {
+                        // 2. Реклама готова → показываем
+                        vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'reward' })
+                            .then(() => {
+                                showResult(); // После просмотра → результат
+                            })
+                            .catch(() => {
+                                // Если показ не удался → эмуляция
+                                startEmulation();
+                            });
+                    } else {
+                        // Реклама не готова → эмуляция
+                        startEmulation();
+                    }
+                })
+                .catch(() => {
+                    // Ошибка проверки → эмуляция
+                    startEmulation();
+                });
         }
 
         function showResult() {
@@ -332,7 +339,7 @@
             showScreen('screen-result');
         }
 
-          async function shareResult() {
+        async function shareResult() {
             const data = resultData[currentResult];
             const message = `Мой теневой архетип — ${data.title}. Узнай свой: https://vk.com/app${APP_ID}`;
             
@@ -367,7 +374,7 @@
             }
         }
 
-         function buyPremium() {
+        function buyPremium() {
             const data = resultData[currentResult];
             if (!data) return;
 
