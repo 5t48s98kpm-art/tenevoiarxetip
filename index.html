@@ -367,7 +367,7 @@
             }
         }
 
-        function buyPremium() {
+         function buyPremium() {
             const data = resultData[currentResult];
             if (!data) return;
 
@@ -375,12 +375,20 @@
             vkBridge.send('VKWebAppShowOrderBox', {
                 type: 'item',
                 item: 'full_breakdown' // Должно совпадать с item_id в Cloudflare Worker
-            }).then(result => {
-                if (result && result.result) {
+            })
+            .then(result => {
+                console.log('Результат оплаты (VKWebAppShowOrderBox):', result); // Смотрим в консоль F12
+
+                // Если пришёл любой успешный ответ (order_id или result), открываем премиум
+                if (result && (result.result || result.order_id)) {
                     document.getElementById('premium-text').innerHTML = data.premium;
                     showScreen('screen-premium');
+                } else {
+                    console.warn('Оплата не подтверждена или структура ответа неожиданная:', result);
+                    alert('Оплата не прошла или возникла ошибка. Попробуйте позже.');
                 }
-            }).catch(err => console.error('OrderBox error:', err));
+            })
+            .catch(err => console.error('OrderBox error:', err));
         }
 
         function restartQuiz() {
