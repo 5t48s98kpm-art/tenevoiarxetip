@@ -356,13 +356,15 @@
             const transparentPixel = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
 
             if (isOk) {
-                // ОДНОКЛАССНИКИ: разделяем link и text, чтобы веб-граббер не пытался парсить ссылку в тексте
+                // ОДНОКЛАССНИКИ: убираем параметр link, чтобы ОК не пытался загрузить превью
                 link = 'https://ok.ru/app/512005186277';
                 if (shareBtn) shareBtn.textContent = 'Поделиться с друзьями';
                 
+                // Ссылка остаётся только в тексте, чтобы не триггерить граббер
+                const message = `Мой теневой архетип — ${data.title}. Узнай свой: ${link}`;
+                
                 vkBridge.send('VKWebAppShare', {
-                    link: link,
-                    text: `Мой теневой архетип — ${data.title}. Узнай свой!`
+                    text: message
                 }).catch(err => console.log('Share error (OK):', err));
             } else {
                 // ВКОНТАКТЕ: история с прозрачным пикселем (обход CSP)
