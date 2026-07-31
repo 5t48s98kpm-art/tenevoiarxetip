@@ -356,16 +356,16 @@
             const transparentPixel = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
 
             if (isOk) {
-                // ОДНОКЛАССНИКИ: нативное окно поделиться
+                // ОДНОКЛАССНИКИ: разделяем link и text, чтобы веб-граббер не пытался парсить ссылку в тексте
                 link = 'https://ok.ru/app/512005186277';
                 if (shareBtn) shareBtn.textContent = 'Поделиться с друзьями';
-                const message = `Мой теневой архетип — ${data.title}. Узнай свой: ${link}`;
                 
                 vkBridge.send('VKWebAppShare', {
-                    text: message
+                    link: link,
+                    text: `Мой теневой архетип — ${data.title}. Узнай свой!`
                 }).catch(err => console.log('Share error (OK):', err));
             } else {
-                // ВКОНТАКТЕ: История с прозрачным фоном (обход CSP)
+                // ВКОНТАКТЕ: история с прозрачным пикселем (обход CSP)
                 link = 'https://vk.com/app' + APP_ID;
                 if (shareBtn) shareBtn.textContent = 'Поделиться в истории';
                 const message = `Мой теневой архетип — ${data.title}. Узнай свой: ${link}`;
