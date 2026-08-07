@@ -352,11 +352,11 @@
 
             const shareBtn = document.getElementById('share-btn');
 
-            // Прозрачный пиксель (обходит CORS и не требует внешней картинки)
+            // Прозрачный пиксель (обход CORS)
             const transparentPixel = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
 
             if (isOk) {
-                // ОДНОКЛАССНИКИ
+                // ОДНОКЛАССНИКИ: нативное окно поделиться
                 link = 'https://ok.ru/app/512005186277';
                 if (shareBtn) shareBtn.textContent = 'Поделиться с друзьями';
                 const message = `Мой теневой архетип — ${data.title}. Узнай свой: ${link}`;
@@ -365,21 +365,57 @@
                     text: message
                 }).catch(err => console.log('Share error (OK):', err));
             } else {
-                // ВКОНТАКТЕ (Строго по документации: background_type: 'image' + url + attachment)
+                // ВКОНТАКТЕ: История с текстом (строго по документации через stickers)
                 link = 'https://vk.com/app' + APP_ID;
                 if (shareBtn) shareBtn.textContent = 'Поделиться в истории';
-                const message = `Мой теневой архетип — ${data.title}. Узнай свой: ${link}`;
                 
                 await vkBridge.send('VKWebAppShowStoryBox', {
-                    background_type: 'image',    // Как требует документация
-                    url: transparentPixel,       // Прозрачный пиксель вместо картинки
-                    locked: true,                // Блокируем перемещение фона
-                    attachment: {                // Добавляем кнопку "Открыть" (из документации!)
+                    background_type: 'image',
+                    url: transparentPixel, // Прозрачный пиксель (ВК считает это картинкой)
+                    locked: true, // Блокируем перемещение фона
+                    
+                    // Кнопка внизу истории (как в примере документации)
+                    attachment: {
                         type: 'url',
-                        text: 'open',            // ВК сам переведёт это в «Открыть»
-                        url: link                // Ссылка на твоё приложение
+                        text: 'open', // ВК сам переведет в "Открыть"
+                        url: link
                     },
-                    message: message             // Текст истории
+
+                    // Текст внутри истории (заменяет старый неработающий message)
+                    stickers: [
+                        {
+                            sticker_type: "native",
+                            sticker: {
+                                action_type: "text",
+                                action: {
+                                    text: `Мой теневой архетип — ${data.title}`,
+                                    style: "classic",
+                                    background_style: "none",
+                                    selection_color: "#d4af37"
+                                },
+                                transform: {
+                                    gravity: "center_top",
+                                    translation_y: 0.25
+                                }
+                            }
+                        },
+                        {
+                            sticker_type: "native",
+                            sticker: {
+                                action_type: "text",
+                                action: {
+                                    text: "Узнай свой архетип!",
+                                    style: "classic",
+                                    background_style: "none",
+                                    selection_color: "#ccc"
+                                },
+                                transform: {
+                                    gravity: "center_bottom",
+                                    translation_y: -0.25
+                                }
+                            }
+                        }
+                    ]
                 }).catch(err => console.log('Story error (VK):', err));
             }
         }
