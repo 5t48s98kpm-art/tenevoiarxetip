@@ -352,11 +352,17 @@
 
             const shareBtn = document.getElementById('share-btn');
 
-            // Прозрачный пиксель (обход CORS)
-            const transparentPixel = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+            // 1. Генерируем тёмный квадрат (цвет приложения #0a0a0f) прямо в Canvas, чтобы обойти синий фон ВК
+            const canvas = document.createElement('canvas');
+            canvas.width = 100;
+            canvas.height = 100;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#0a0a0f'; // Твой цвет фона
+            ctx.fillRect(0, 0, 100, 100);
+            const darkBackgroundUrl = canvas.toDataURL('image/png');
 
             if (isOk) {
-                // ОДНОКЛАССНИКИ: нативное окно поделиться
+                // ОДНОКЛАССНИКИ
                 link = 'https://ok.ru/app/512005186277';
                 if (shareBtn) shareBtn.textContent = 'Поделиться с друзьями';
                 const message = `Мой теневой архетип — ${data.title}. Узнай свой: ${link}`;
@@ -365,23 +371,23 @@
                     text: message
                 }).catch(err => console.log('Share error (OK):', err));
             } else {
-                // ВКОНТАКТЕ: История с текстом (строго по документации через stickers)
+                // ВКОНТАКТЕ (С цветным фоном, сгенерированным на ходу)
                 link = 'https://vk.com/app' + APP_ID;
                 if (shareBtn) shareBtn.textContent = 'Поделиться в истории';
                 
                 await vkBridge.send('VKWebAppShowStoryBox', {
                     background_type: 'image',
-                    url: transparentPixel, // Прозрачный пиксель (ВК считает это картинкой)
-                    locked: true, // Блокируем перемещение фона
+                    url: darkBackgroundUrl, // Передаём сгенерированный тёмный квадрат
+                    locked: true,
                     
-                    // Кнопка внизу истории (как в примере документации)
+                    // Кнопка "Открыть" (будет видна после публикации)
                     attachment: {
                         type: 'url',
-                        text: 'open', // ВК сам переведет в "Открыть"
+                        text: 'open', 
                         url: link
                     },
 
-                    // Текст внутри истории (заменяет старый неработающий message)
+                    // Текст истории
                     stickers: [
                         {
                             sticker_type: "native",
@@ -391,7 +397,7 @@
                                     text: `Мой теневой архетип — ${data.title}`,
                                     style: "classic",
                                     background_style: "none",
-                                    selection_color: "#d4af37"
+                                    selection_color: "#d4af37" // Золотой цвет
                                 },
                                 transform: {
                                     gravity: "center_top",
@@ -407,7 +413,7 @@
                                     text: "Узнай свой архетип!",
                                     style: "classic",
                                     background_style: "none",
-                                    selection_color: "#ccc"
+                                    selection_color: "#ffffff"
                                 },
                                 transform: {
                                     gravity: "center_bottom",
