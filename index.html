@@ -92,11 +92,6 @@
             margin: 0 auto 20px;
             background-color: #0a0a0f;
         }
-        #ad-timer {
-            font-size: 1.5rem;
-            color: #f5c842;
-            font-weight: bold;
-        }
     </style>
 </head>
 <body>
@@ -192,12 +187,10 @@
             </div>
         </div>
 
-        <!-- ЭКРАН ЗАГРУЗКИ С ТАЙМЕРОМ -->
+        <!-- ЭКРАН ЗАГРУЗКИ (без эмуляции, без таймера) -->
         <div class="screen" id="screen-loading">
             <img src="images/over.jpg" alt="Ожидание" class="loading-image">
-            <div class="loading" style="margin-bottom: 5px;">⏳ Тени сгущаются… Мы снимаем покров…</div>
-            <div id="ad-timer">5</div>
-            <p class="small" style="margin-top: 5px;">Тестовый просмотр рекламы. Эмуляция.</p>
+            <div class="loading">⏳ Тени сгущаются… Мы снимаем покров…</div>
         </div>
 
         <div class="screen" id="screen-result">
@@ -206,7 +199,7 @@
             <p id="result-desc"></p>
             <button class="btn btn-block" id="share-btn" onclick="shareResult()">Поделиться</button>
             
-            <!-- Контейнер для кнопки оплаты. Он будет скрыт для Одноклассников через JS -->
+            <!-- Контейнер для кнопки оплаты теперь виден для всех платформ -->
             <div id="premium-btn-container" style="display: block;">
                 <button class="btn btn-block" id="premium-btn" onclick="buyPremium()">Получить Полный Разбор (7 голосов)</button>
             </div>
@@ -235,14 +228,9 @@
             .then(data => {
                 if (data.vk_platform && data.vk_platform.includes('_ok')) {
                     platform = 'ok';
-                    // Скрываем кнопку оплаты для Одноклассников
-                    const btnContainer = document.getElementById('premium-btn-container');
-                    if (btnContainer) btnContainer.style.display = 'none';
                 }
             })
-            .catch(() => {
-                // если не удалось определить, остаётся ВК
-            });
+            .catch(() => {});
 
         const scores = {
             trickster: 0,
@@ -285,44 +273,23 @@
             return winner;
         }
 
-        // Функция эмуляции рекламы (таймер), если реальная реклама недоступна
-        function startEmulation() {
-            let seconds = 5;
-            const timerEl = document.getElementById('ad-timer');
-            if(timerEl) timerEl.textContent = seconds;
-
-            const countdown = setInterval(() => {
-                seconds--;
-                if(timerEl) timerEl.textContent = seconds;
-                if(seconds <= 0) {
-                    clearInterval(countdown);
-                    if(timerEl) timerEl.textContent = "Готово!";
-                    setTimeout(showResult, 300);
-                }
-            }, 1000);
-        }
-
-       // Основная функция показа рекламы (убираем эмуляцию для опубликованного приложения)
+        // Основная функция показа рекламы (без эмуляции)
         function showRewardedVideo() {
             vkBridge.send('VKWebAppCheckNativeAds', { ad_format: 'reward' })
                 .then((data) => {
                     if (data.result) {
-                        // Если реклама готова — показываем её
                         vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'reward' })
                             .then(() => {
-                                showResult(); // После просмотра — результат
+                                showResult();
                             })
                             .catch(() => {
-                                // Если реклама не показалась, сразу даём результат (без таймера)
                                 showResult();
                             });
                     } else {
-                        // Если рекламы нет — даём результат сразу (без таймера)
                         showResult();
                     }
                 })
                 .catch(() => {
-                    // Ошибка проверки — даём результат сразу (без таймера)
                     showResult();
                 });
         }
@@ -351,12 +318,12 @@
 
             const shareBtn = document.getElementById('share-btn');
 
-            // 1. Генерируем тёмный квадрат (цвет приложения #0a0a0f) прямо в Canvas, чтобы обойти синий фон ВК
+            // Генерируем тёмный квадрат (цвет приложения #0a0a0f) прямо в Canvas
             const canvas = document.createElement('canvas');
             canvas.width = 100;
             canvas.height = 100;
             const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#0a0a0f'; // Твой цвет фона
+            ctx.fillStyle = '#0a0a0f';
             ctx.fillRect(0, 0, 100, 100);
             const darkBackgroundUrl = canvas.toDataURL('image/png');
 
@@ -370,23 +337,19 @@
                     text: message
                 }).catch(err => console.log('Share error (OK):', err));
             } else {
-                // ВКОНТАКТЕ (С цветным фоном, сгенерированным на ходу)
+                // ВКОНТАКТЕ
                 link = 'https://vk.com/app' + APP_ID;
                 if (shareBtn) shareBtn.textContent = 'Поделиться в истории';
                 
                 await vkBridge.send('VKWebAppShowStoryBox', {
                     background_type: 'image',
-                    url: darkBackgroundUrl, // Передаём сгенерированный тёмный квадрат
+                    url: darkBackgroundUrl,
                     locked: true,
-                    
-                    // Кнопка "Открыть" (будет видна после публикации)
                     attachment: {
                         type: 'url',
-                        text: 'open', 
+                        text: 'open',
                         url: link
                     },
-
-                    // Текст истории
                     stickers: [
                         {
                             sticker_type: "native",
@@ -396,7 +359,7 @@
                                     text: `Мой теневой архетип — ${data.title}`,
                                     style: "classic",
                                     background_style: "none",
-                                    selection_color: "#d4af37" // Золотой цвет
+                                    selection_color: "#d4af37"
                                 },
                                 transform: {
                                     gravity: "center_top",
@@ -425,28 +388,55 @@
             }
         }
 
-        function buyPremium() {
+        // Универсальная функция оплаты: для ВК — голоса, для ОК — ОКи
+        async function buyPremium() {
             const data = resultData[currentResult];
             if (!data) return;
 
-            // Вызов официального метода для голосов
-            vkBridge.send('VKWebAppShowOrderBox', {
-                type: 'item',
-                item: 'full_breakdown' // Должно совпадать с item_id в Cloudflare Worker
-            })
-            .then(result => {
-                console.log('Результат оплаты (VKWebAppShowOrderBox):', result); // Смотрим в консоль F12
-
-                // Если пришёл любой успешный ответ (order_id или result), открываем премиум
-                if (result && (result.result || result.order_id)) {
-                    document.getElementById('premium-text').innerHTML = data.premium;
-                    showScreen('screen-premium');
-                } else {
-                    console.warn('Оплата не подтверждена или структура ответа неожиданная:', result);
-                    alert('Оплата не прошла или возникла ошибка. Попробуйте позже.');
+            // Определяем платформу
+            let isOk = false;
+            try {
+                const launchParams = await vkBridge.send('VKWebAppGetLaunchParams');
+                if (launchParams && launchParams.vk_platform && launchParams.vk_platform.includes('_ok')) {
+                    isOk = true;
                 }
-            })
-            .catch(err => console.error('OrderBox error:', err));
+            } catch (e) {}
+
+            if (isOk) {
+                // ОДНОКЛАССНИКИ: оплата за ОКи
+                vkBridge.send('VKWebAppOpenPayForm', {
+                    app_id: APP_ID,
+                    action: 'pay-to-service',
+                    params: {
+                        item_name: 'Archetype_' + currentResult,
+                        item_price: 7,
+                        item_currency: 'coins'
+                    }
+                })
+                .then(result => {
+                    if (result && result.result) {
+                        document.getElementById('premium-text').innerHTML = data.premium;
+                        showScreen('screen-premium');
+                    }
+                })
+                .catch(err => console.error('Payment error (OK):', err));
+            } else {
+                // ВКОНТАКТЕ: оплата за голоса через OrderBox
+                vkBridge.send('VKWebAppShowOrderBox', {
+                    type: 'item',
+                    item: 'full_breakdown'
+                })
+                .then(result => {
+                    if (result && (result.result || result.order_id)) {
+                        document.getElementById('premium-text').innerHTML = data.premium;
+                        showScreen('screen-premium');
+                    } else {
+                        console.warn('Оплата не подтверждена или структура ответа неожиданная:', result);
+                        alert('Оплата не прошла или возникла ошибка. Попробуйте позже.');
+                    }
+                })
+                .catch(err => console.error('OrderBox error:', err));
+            }
         }
 
         function restartQuiz() {
