@@ -187,7 +187,7 @@
             </div>
         </div>
 
-        <!-- ЭКРАН ЗАГРУЗКИ (без эмуляции, без таймера) -->
+        <!-- ЭКРАН ЗАГРУЗКИ -->
         <div class="screen" id="screen-loading">
             <img src="images/over.jpg" alt="Ожидание" class="loading-image">
             <div class="loading">⏳ Тени сгущаются… Мы снимаем покров…</div>
@@ -199,9 +199,10 @@
             <p id="result-desc"></p>
             <button class="btn btn-block" id="share-btn" onclick="shareResult()">Поделиться</button>
             
-            <!-- Контейнер для кнопки оплаты теперь виден для всех платформ -->
+            <!-- Контейнер для кнопки оплаты -->
             <div id="premium-btn-container" style="display: block;">
-                <button class="btn btn-block" id="premium-btn" onclick="buyPremium()">Получить Полный Разбор (7 голосов)</button>
+                <!-- Текст будет меняться динамически через JS -->
+                <button class="btn btn-block" id="premium-btn" onclick="buyPremium()">Получить Полный Разбор</button>
             </div>
             
             <button class="btn btn-block" onclick="restartQuiz()">Пройти заново</button>
@@ -393,7 +394,7 @@
             const data = resultData[currentResult];
             if (!data) return;
 
-            // Определяем платформу
+            // Определяем платформу и меняем текст кнопки
             let isOk = false;
             try {
                 const launchParams = await vkBridge.send('VKWebAppGetLaunchParams');
@@ -402,15 +403,19 @@
                 }
             } catch (e) {}
 
+            const premiumBtn = document.getElementById('premium-btn');
+
             if (isOk) {
                 // ОДНОКЛАССНИКИ: оплата за ОКи
+                premiumBtn.textContent = 'Получить Полный Разбор (7 ОКов)';
+                
                 vkBridge.send('VKWebAppOpenPayForm', {
                     app_id: APP_ID,
                     action: 'pay-to-service',
                     params: {
                         item_name: 'Archetype_' + currentResult,
                         item_price: 7,
-                        item_currency: 'coins'
+                        item_currency: 'coins' // ВАЖНО: валюта ОКов
                     }
                 })
                 .then(result => {
@@ -422,6 +427,8 @@
                 .catch(err => console.error('Payment error (OK):', err));
             } else {
                 // ВКОНТАКТЕ: оплата за голоса через OrderBox
+                premiumBtn.textContent = 'Получить Полный Разбор (7 голосов)';
+                
                 vkBridge.send('VKWebAppShowOrderBox', {
                     type: 'item',
                     item: 'full_breakdown'
