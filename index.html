@@ -329,8 +329,8 @@
             const darkBackgroundUrl = canvas.toDataURL('image/png');
 
             if (isOk) {
-                // ОДНОКЛАССНИКИ
-                link = 'https://ok.ru/app/512005186277';
+                // ОДНОКЛАССНИКИ (используем каноничный адрес согласно документации)
+                link = 'https://ok.ru/app/vk.app54687803'; // <-- ИЗМЕНЕНО
                 if (shareBtn) shareBtn.textContent = 'Поделиться с друзьями';
                 const message = `Мой теневой архетип — ${data.title}. Узнай свой: ${link}`;
                 
