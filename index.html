@@ -405,12 +405,9 @@
             const premiumBtn = document.getElementById('premium-btn');
 
             if (isOk) {
-                // ОДНОКЛАССНИКИ: оплата за ОКи с правильным APP_ID
-                const OK_APP_ID = 512005186277; // Ваш ID приложения в Одноклассниках
-                
+                // ОДНОКЛАССНИКИ: убираем app_id, платформа подтянет его сама
                 premiumBtn.textContent = 'Получить Полный Разбор (7 ОКов)';
                 vkBridge.send('VKWebAppOpenPayForm', {
-                    app_id: OK_APP_ID, // ВАЖНО: передаём ID Одноклассников
                     action: 'pay-to-service',
                     params: {
                         item_name: 'Archetype_' + currentResult,
@@ -426,7 +423,7 @@
                 })
                 .catch(err => console.error('Payment error (OK):', err));
             } else {
-                // ВКОНТАКТЕ: оплата за голоса через OrderBox
+                // ВКОНТАКТЕ: оплата за голоса через OrderBox (здесь оставляем APP_ID)
                 premiumBtn.textContent = 'Получить Полный Разбор (7 голосов)';
                 vkBridge.send('VKWebAppShowOrderBox', {
                     type: 'item',
