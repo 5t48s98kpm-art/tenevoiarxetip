@@ -201,7 +201,6 @@
             
             <!-- Контейнер для кнопки оплаты -->
             <div id="premium-btn-container" style="display: block;">
-                <!-- Текст будет меняться динамически через JS -->
                 <button class="btn btn-block" id="premium-btn" onclick="buyPremium()">Получить Полный Разбор</button>
             </div>
             
@@ -330,7 +329,7 @@
 
             if (isOk) {
                 // ОДНОКЛАССНИКИ (используем каноничный адрес согласно документации)
-                link = 'https://ok.ru/app/vk.app54687803'; // <-- ИЗМЕНЕНО
+                link = 'https://ok.ru/app/vk.app54687803';
                 if (shareBtn) shareBtn.textContent = 'Поделиться с друзьями';
                 const message = `Мой теневой архетип — ${data.title}. Узнай свой: ${link}`;
                 
@@ -405,9 +404,12 @@
             const premiumBtn = document.getElementById('premium-btn');
 
             if (isOk) {
-                // ОДНОКЛАССНИКИ: убираем app_id, платформа подтянет его сама
+                // ОДНОКЛАССНИКИ: оплата за ОКи с их родным ID
+                const OK_APP_ID = 512005186277;
+                
                 premiumBtn.textContent = 'Получить Полный Разбор (7 ОКов)';
                 vkBridge.send('VKWebAppOpenPayForm', {
+                    app_id: OK_APP_ID, // <--- ВАЖНО: правильный ID для Одноклассников
                     action: 'pay-to-service',
                     params: {
                         item_name: 'Archetype_' + currentResult,
@@ -423,7 +425,7 @@
                 })
                 .catch(err => console.error('Payment error (OK):', err));
             } else {
-                // ВКОНТАКТЕ: оплата за голоса через OrderBox (здесь оставляем APP_ID)
+                // ВКОНТАКТЕ: оплата за голоса через OrderBox
                 premiumBtn.textContent = 'Получить Полный Разбор (7 голосов)';
                 vkBridge.send('VKWebAppShowOrderBox', {
                     type: 'item',
