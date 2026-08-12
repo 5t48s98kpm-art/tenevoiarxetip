@@ -389,7 +389,7 @@
         }
 
         // Универсальная функция оплаты: для ВК — голоса, для ОК — ОКи
-        async function buyPremium() {
+         async function buyPremium() {
             const data = resultData[currentResult];
             if (!data) return;
 
@@ -404,14 +404,14 @@
             const premiumBtn = document.getElementById('premium-btn');
 
             if (isOk) {
-                // ОДНОКЛАССНИКИ: оплата за ОКи с их родным ID
+                // ОДНОКЛАССНИКИ: переносим app_id внутрь params (фикс ошибки code: 6)
                 const OK_APP_ID = 512005186277;
                 
                 premiumBtn.textContent = 'Получить Полный Разбор (7 ОКов)';
                 vkBridge.send('VKWebAppOpenPayForm', {
-                    app_id: OK_APP_ID, // <--- ВАЖНО: правильный ID для Одноклассников
                     action: 'pay-to-service',
                     params: {
+                        app_id: OK_APP_ID, // <--- ВАЖНОЕ ИЗМЕНЕНИЕ!
                         item_name: 'Archetype_' + currentResult,
                         item_price: 7,
                         item_currency: 'coins'
