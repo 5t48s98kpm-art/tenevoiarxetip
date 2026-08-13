@@ -216,21 +216,22 @@
 
     <script>
         const APP_ID = 54687803;
+        let platform = 'vk';
 
-        // Защита от ошибок, если библиотека VK Bridge не загрузилась
-        if (typeof vkBridge !== 'undefined') {
-            vkBridge.send('VKWebAppInit');
-        }
-
-        // Определение платформы
-        let platform = 'vk'; // по умолчанию ВК
-        vkBridge.send('VKWebAppGetLaunchParams')
-            .then(data => {
-                if (data.vk_platform && data.vk_platform.includes('_ok')) {
+        // Асинхронная инициализация VK Bridge
+        async function initApp() {
+            try {
+                const launchParams = await vkBridge.send('VKWebAppGetLaunchParams');
+                if (launchParams && launchParams.vk_platform && launchParams.vk_platform.includes('_ok')) {
                     platform = 'ok';
                 }
-            })
-            .catch(() => {});
+                await vkBridge.send('VKWebAppInit');
+                console.log('VK Bridge initialized. Platform:', platform);
+            } catch (e) {
+                console.error('Init error:', e);
+            }
+        }
+        initApp();
 
         const scores = {
             trickster: 0,
@@ -273,7 +274,6 @@
             return winner;
         }
 
-        // Основная функция показа рекламы (без эмуляции)
         function showRewardedVideo() {
             vkBridge.send('VKWebAppCheckNativeAds', { ad_format: 'reward' })
                 .then((data) => {
@@ -318,7 +318,6 @@
 
             const shareBtn = document.getElementById('share-btn');
 
-            // Генерируем тёмный квадрат (цвет приложения #0a0a0f) прямо в Canvas
             const canvas = document.createElement('canvas');
             canvas.width = 100;
             canvas.height = 100;
@@ -328,19 +327,14 @@
             const darkBackgroundUrl = canvas.toDataURL('image/png');
 
             if (isOk) {
-                // ОДНОКЛАССНИКИ (используем каноничный адрес согласно документации)
                 link = 'https://ok.ru/app/vk.app54687803';
                 if (shareBtn) shareBtn.textContent = 'Поделиться с друзьями';
                 const message = `Мой теневой архетип — ${data.title}. Узнай свой: ${link}`;
-                
-                vkBridge.send('VKWebAppShare', {
-                    text: message
-                }).catch(err => console.log('Share error (OK):', err));
+                vkBridge.send('VKWebAppShare', { text: message })
+                    .catch(err => console.log('Share error (OK):', err));
             } else {
-                // ВКОНТАКТЕ
                 link = 'https://vk.com/app' + APP_ID;
                 if (shareBtn) shareBtn.textContent = 'Поделиться в истории';
-                
                 await vkBridge.send('VKWebAppShowStoryBox', {
                     background_type: 'image',
                     url: darkBackgroundUrl,
@@ -388,8 +382,7 @@
             }
         }
 
-        // Универсальная функция оплаты: для ВК — голоса, для ОК — ОКи
-         async function buyPremium() {
+        async function buyPremium() {
             const data = resultData[currentResult];
             if (!data) return;
 
@@ -404,26 +397,22 @@
             const premiumBtn = document.getElementById('premium-btn');
 
             if (isOk) {
-                // ОДНОКЛАССНИКИ: переносим app_id внутрь params (фикс ошибки code: 6)
-                const OK_APP_ID = 512005186277;
-                
+                // ОДНОКЛАССНИКИ: используем VKWebAppShowOrderBox
                 premiumBtn.textContent = 'Получить Полный Разбор (7 ОКов)';
-                vkBridge.send('VKWebAppOpenPayForm', {
-                    action: 'pay-to-service',
-                    params: {
-                        app_id: OK_APP_ID, // <--- ВАЖНОЕ ИЗМЕНЕНИЕ!
-                        item_name: 'Archetype_' + currentResult,
-                        item_price: 7,
-                        item_currency: 'coins'
-                    }
+                vkBridge.send('VKWebAppShowOrderBox', {
+                    type: 'item',
+                    item: 'full_breakdown'
                 })
                 .then(result => {
-                    if (result && result.result) {
+                    if (result && (result.result || result.order_id)) {
                         document.getElementById('premium-text').innerHTML = data.premium;
                         showScreen('screen-premium');
+                    } else {
+                        console.warn('Оплата не подтверждена или структура ответа неожиданная:', result);
+                        alert('Оплата не прошла или возникла ошибка. Попробуйте позже.');
                     }
                 })
-                .catch(err => console.error('Payment error (OK):', err));
+                .catch(err => console.error('OrderBox error (OK):', err));
             } else {
                 // ВКОНТАКТЕ: оплата за голоса через OrderBox
                 premiumBtn.textContent = 'Получить Полный Разбор (7 голосов)';
