@@ -404,7 +404,9 @@
                     item: 'full_breakdown'
                 })
                 .then(result => {
-                    if (result && (result.result || result.order_id)) {
+                    console.log('Результат оплаты в Одноклассниках:', result);
+                    // Проверяем любой успешный признак: result, result.result, order_id или отсутствие error
+                    if (result && !result.error) {
                         document.getElementById('premium-text').innerHTML = data.premium;
                         showScreen('screen-premium');
                     } else {
@@ -412,7 +414,10 @@
                         alert('Оплата не прошла или возникла ошибка. Попробуйте позже.');
                     }
                 })
-                .catch(err => console.error('OrderBox error (OK):', err));
+                .catch(err => {
+                    console.error('OrderBox error (OK):', err);
+                    alert('Ошибка оплаты: ' + (err?.error_data?.reason || err?.message || 'неизвестная ошибка'));
+                });
             } else {
                 // ВКОНТАКТЕ: оплата за голоса через OrderBox
                 premiumBtn.textContent = 'Получить Полный Разбор (7 голосов)';
