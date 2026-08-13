@@ -227,6 +227,23 @@
                 }
                 await vkBridge.send('VKWebAppInit');
                 console.log('VK Bridge initialized. Platform:', platform);
+                
+                // --- ЗАЩИТА ОТ ПЕРЕЗАГРУЗКИ ОК ---
+                // Если перед перезагрузкой была успешная покупка, сразу открываем результат
+                if (localStorage.getItem('buyPremiumSuccess') === 'true') {
+                    const savedResult = localStorage.getItem('buyPremiumResult');
+                    if (savedResult && resultData[savedResult]) {
+                        // Восстанавливаем данные
+                        currentResult = savedResult;
+                        const data = resultData[currentResult];
+                        document.getElementById('premium-text').innerHTML = data.premium;
+                        showScreen('screen-premium');
+                        // Очищаем флаг, чтобы не открывалось бесконечно
+                        localStorage.removeItem('buyPremiumSuccess');
+                        localStorage.removeItem('buyPremiumResult');
+                    }
+                }
+                // -----------------------------------
             } catch (e) {
                 console.error('Init error:', e);
             }
@@ -407,6 +424,11 @@
                     console.log('Результат оплаты в Одноклассниках:', result);
                     // Проверяем любой успешный признак: result, result.result, order_id или отсутствие error
                     if (result && !result.error) {
+                        // --- СОХРАНЯЕМ УСПЕШНУЮ ПОКУПКУ В КЭШ ---
+                        localStorage.setItem('buyPremiumSuccess', 'true');
+                        localStorage.setItem('buyPremiumResult', currentResult);
+                        // ----------------------------------------
+
                         document.getElementById('premium-text').innerHTML = data.premium;
                         showScreen('screen-premium');
                     } else {
